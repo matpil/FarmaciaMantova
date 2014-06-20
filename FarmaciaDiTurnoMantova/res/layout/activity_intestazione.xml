@@ -1,0 +1,104 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/listView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="#00aa00"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingLeft="10dp" >
+
+    <TextView
+        android:id="@+id/textNomeFarmaciaTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="100dp"
+        android:layout_marginTop="100dp"
+        android:gravity="right"
+        android:text="Nome Farmacia"
+        android:textColor="#ffffff"
+        android:textSize="18sp" />
+
+    <EditText
+        android:id="@+id/editNomeFarmacia"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/textNomeFarmaciaTV"
+        android:layout_alignBottom="@+id/textNomeFarmaciaTV"
+        android:layout_marginLeft="50dp"
+        android:layout_toRightOf="@+id/textNomeFarmaciaTV"
+        android:ems="30"
+        android:hint="inserisci il nome completo della farmacia"
+        android:textColor="#ffffff" />
+
+    <EditText
+        android:id="@+id/editIndirizzo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/editNomeFarmacia"
+        android:layout_below="@+id/editNomeFarmacia"
+        android:layout_marginTop="60dp"
+        android:ems="30"
+        android:hint="inserisci l&apos;indirizzo (es. via Tal dei tali, 9 Massena (MN))"
+        android:textColor="#ffffff" />
+
+    <EditText
+        android:id="@+id/editTelefono"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/editIndirizzo"
+        android:layout_below="@+id/editIndirizzo"
+        android:layout_marginTop="60dp"
+        android:ems="30"
+        android:hint="inserisci il numero di telefono della farmacia"
+        android:textColor="#ffffff" />
+
+    <TextView
+        android:id="@+id/textIndirizzoTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editIndirizzo"
+        android:layout_alignBottom="@+id/editIndirizzo"
+        android:layout_alignLeft="@+id/textNomeFarmaciaTV"
+        android:layout_toLeftOf="@+id/editNomeFarmacia"
+        android:gravity="right"
+        android:text="Indirizzo"
+        android:textColor="#ffffff"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/textTelefonoTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/editTelefono"
+        android:layout_alignLeft="@+id/textIndirizzoTV"
+        android:layout_alignRight="@+id/textIndirizzoTV"
+        android:gravity="right"
+        android:text="Telefono"
+        android:textColor="#ffffff"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/buttonAnnulla"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/editTelefono"
+        android:layout_below="@+id/editTelefono"
+        android:layout_marginRight="140dp"
+        android:layout_marginTop="125dp"
+        android:text="ANNULLA"
+        android:textColor="#ffffff" />
+
+    <Button
+        android:id="@+id/buttonSalva"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonAnnulla"
+        android:layout_alignBottom="@+id/buttonAnnulla"
+        android:layout_centerHorizontal="true"
+        android:text="SALVA"
+        android:textColor="#ffffff" />
+
+</RelativeLayout>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mn1LL"
+    android:layout_gravity="center"
+    android:layout_margin="2dp"
+    android:background="@drawable/bg_box"
+    android:gravity="top"
+    android:measureWithLargestChild="true"
+    android:orientation="vertical"
+    android:padding="10dp" >
+
+    <TextView
+        android:id="@+id/localitaTv"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="@string/genericString"
+        android:textColor="#000000"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/nomeTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/genericString"
+        android:textColor="#000000"
+        android:textSize="20sp" />
+ 
+    <TextView
+        android:id="@+id/addressTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/genericString"
+        android:textColor="#000000"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/TelTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/genericString"
+        android:textColor="#000000"
+        android:textSize="20sp" />
+    
+    <TextView
+        android:id="@+id/noteTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"        
+        android:textColor="#ff0000"
+        android:textSize="20sp" />    
+
+</LinearLayout>
