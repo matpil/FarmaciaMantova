@@ -15,6 +15,7 @@ import java.util.StringTokenizer;
 
 import android.content.Context;
 import android.os.Environment;
+import android.widget.Toast;
 
 import com.matpil.farmacia.model.Farmacia;
 
@@ -25,8 +26,8 @@ public class ImportaFarmacieDaFile {
 	private final static File sdcard = Environment.getExternalStorageDirectory();
 	private final static String sdCardPath = String.format("%s/FARMACIAPP", Environment.getExternalStorageDirectory());
 
-	public static Map<String, Farmacia> readTextFile(Context context) {
-		checkDir();
+	public static Map<String, Farmacia> readTextFile(Context context) throws IOException {
+		checkDir(context);
 		BufferedReader in = null;
 		Map<String, Farmacia> mapFarmacie = new HashMap<String, Farmacia>();
 		try {
@@ -53,7 +54,7 @@ public class ImportaFarmacieDaFile {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw e;
 		} finally {
 			if (in != null) {
 				try {
@@ -68,42 +69,34 @@ public class ImportaFarmacieDaFile {
 		return mapFarmacie;
 	}
 
-	private static void checkDir() {
+	private static void checkDir(Context context) {
 		File dirPath = new File(sdCardPath);
 		if (!dirPath.exists()) {
-			dirPath.mkdir();
+			boolean mkdir = dirPath.mkdir();
+			if (!mkdir)
+				Toast.makeText(context, "CARTELLA "+sdCardPath+" NON CREATA", Toast.LENGTH_LONG).show();
+			else
+				Toast.makeText(context, "DIRECTORY CREATA, path -> " + sdCardPath, Toast.LENGTH_LONG).show();
 		}
 	}
 
 	public static Map<String, List<Farmacia>> readTurniFile(Context context, Map<String, Farmacia> pharmMap) {
-		checkDir();
+		checkDir(context);
 		BufferedReader in = null;
 		Map<String, List<Farmacia>> mapTurniFarmacie = new HashMap<String, List<Farmacia>>();
 		try {
-//			System.out.println("FILE_NAME -> " + NOME_FILE_TURNI);
+			// System.out.println("FILE_NAME -> " + NOME_FILE_TURNI);
 			File fileTurni = new File(String.format("%s/%s", sdCardPath, NOME_FILE_TURNI));
 			String pathFile = fileTurni.getPath();
 			InputStream input = new FileInputStream(pathFile);
-			// if (!fileTurni.exists()) {
-			// pathFile = fileName;
-			// input = context.getAssets().open(pathFile);
-			// System.out.println("PATHFILE LOCALE -> " + pathFile);
-			// } else {
-			// System.out.println("PATHFILE SDCARD -> " + pathFile +
-			// " EXISTS ->" + new File(pathFile).exists());
-			// input = new FileInputStream(pathFile);
-			// }
 
-//			System.out.println("PATHFILE -> " + pathFile);
-			// in = new BufferedReader(new InputStreamReader(new
-			// FileInputStream(fileTurni)));
 			in = new BufferedReader(new InputStreamReader(input, Charset.forName("ISO-8859-1")));
 			String line;
 			while ((line = in.readLine()) != null) {
 				// System.out.println(line);
 				StringTokenizer st = new StringTokenizer(line, ";", true);
 				List<Farmacia> farmList = new ArrayList<Farmacia>();
-				while (st.hasMoreTokens()) {
+				if (st.hasMoreTokens()) {
 					String data = checkToken(st);
 					checkToken(st); // ora
 					String farm1 = checkToken(st);
@@ -128,32 +121,22 @@ public class ImportaFarmacieDaFile {
 					String note10 = checkToken(st);
 					String farm11 = checkToken(st);
 					String note11 = checkToken(st);
-					/*
-					 * System.out.println(String.format("<%s> - <%s>", data,
-					 * ora));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm1, note1));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm2, note2));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm3, note3));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm4, note4));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm5, note5));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm6, note6));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm7, note7));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm8, note8));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm9, note9));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm10, note10));
-					 * System.out.println(String.format("\t<%s> note: <%s>",
-					 * farm11, note11));
-					 */
+
+//					if (data.equals("22/06/2014")) {
+//					System.out.println(String.format("<%s>", data));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm1, note1));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm2, note2));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm3, note3));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm4, note4));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm5, note5));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm6, note6));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm7, note7));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm8, note8));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm9, note9));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm10, note10));
+//					System.out.println(String.format("\t<%s> note: <%s>", farm11, note11));
+//					}
+
 					farmList.add(addPharm(pharmMap, farm1, note1));
 					farmList.add(addPharm(pharmMap, farm3, note3));
 					farmList.add(addPharm(pharmMap, farm4, note4));
@@ -185,9 +168,23 @@ public class ImportaFarmacieDaFile {
 
 	private static Farmacia addPharm(Map<String, Farmacia> pharmMap, String farm, String note) {
 		Farmacia toAdd = pharmMap.get(farm);
-		if (toAdd != null)
+		if (toAdd != null) {
+			toAdd = clonaPharm(toAdd);
 			toAdd.setNote(note);
+//			System.out.println(String.format("Aggiunta nota %s per codice %s", note, toAdd.getCodice()));
+		}
 		return toAdd;
+	}
+
+	private static Farmacia clonaPharm(Farmacia farmacia) {
+		Farmacia pharm = new Farmacia();
+		pharm.setCodice(farmacia.getCodice());
+		pharm.setIndirizzo(farmacia.getIndirizzo());
+		pharm.setLocalità(farmacia.getLocalità());
+		pharm.setNome(farmacia.getNome());
+		pharm.setNote(farmacia.getNote());
+		pharm.setTelefono(farmacia.getTelefono());
+		return pharm;
 	}
 
 	private static Farmacia specialFarm() {
@@ -213,17 +210,17 @@ public class ImportaFarmacieDaFile {
 		return null;
 	}
 
-	public static boolean existPharmListFile() {
-		checkDir();
+	public static boolean existPharmListFile(Context context) {
+		checkDir(context);
 		File fileTurni = new File(String.format("%s/FARMACIAPP/%s", sdcard.getPath(), NOME_FILE_ELENCO_FARMACIE));
-		System.out.println("PATH -> " + fileTurni.getPath());
+//		System.out.println("PATH -> " + fileTurni.getPath());
 		return fileTurni.exists();
 	}
 
-	public static boolean existScheduleFile() {
-		checkDir();
+	public static boolean existScheduleFile(Context context) {
+		checkDir(context);
 		File fileTurni = new File(String.format("%s/FARMACIAPP/%s", sdcard.getPath(), NOME_FILE_TURNI));
-		System.out.println("PATH -> " + fileTurni.getPath());
+//		System.out.println("PATH -> " + fileTurni.getPath());
 		return fileTurni.exists();
 	}
 }

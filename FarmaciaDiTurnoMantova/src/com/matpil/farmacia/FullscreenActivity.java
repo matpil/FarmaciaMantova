@@ -1,6 +1,8 @@
 package com.matpil.farmacia;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -19,11 +21,15 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -43,7 +49,7 @@ import com.matpil.farmacia.util.SystemUiHider;
  * 
  * @see SystemUiHider
  */
-public class FullscreenActivity extends Activity {
+public class FullscreenActivity extends ActionBarActivity {
 	/**
 	 * Whether or not the system UI should be auto-hidden after
 	 * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -71,8 +77,9 @@ public class FullscreenActivity extends Activity {
 	private Map<String, Farmacia> pharmMap;
 	private GridView gridView;
 	private SottoMenu sottoMenu;
+	private boolean actionBarShow = false;
 
-//	private static final String TAG = "BroadcastTest";
+	// private static final String TAG = "BroadcastTest";
 	private Intent intent;
 
 	@Override
@@ -80,6 +87,8 @@ public class FullscreenActivity extends Activity {
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.activity_fullscreen);
+
+		manageActionBar();
 
 		caricaIntestazione();
 		boolean checkDataFile = checkDataFile();
@@ -97,8 +106,28 @@ public class FullscreenActivity extends Activity {
 		otherConfig();
 
 		intent = new Intent(this, BroadcastService.class);
-		
+
 	}// onCreate
+
+	private void manageActionBar() {
+		final ActionBar actionBar = getSupportActionBar();
+		actionBar.hide();
+		AdapterView<?> view = (AdapterView<?>) findViewById(R.id.gridView1);
+
+		view.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				if (!actionBarShow) {
+					actionBar.show();
+					actionBarShow = true;
+				} else {
+					actionBar.hide();
+					actionBarShow = false;
+				}
+			}
+		});
+	}
 
 	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -111,10 +140,10 @@ public class FullscreenActivity extends Activity {
 		if (checkTime()) {
 			loadDataFromFile();
 			Toast.makeText(this, "AGGIORNAMENTO COMPLETATO", Toast.LENGTH_LONG).show();
-		} 
-//		else {
-//			Toast.makeText(this, "WAIT FOR UPDATE", Toast.LENGTH_LONG).show();
-//		}
+		}
+		// else {
+		// Toast.makeText(this, "WAIT FOR UPDATE", Toast.LENGTH_LONG).show();
+		// }
 	}
 
 	@Override
@@ -137,8 +166,9 @@ public class FullscreenActivity extends Activity {
 		String format = sdf.format(now);
 		sdf = new SimpleDateFormat("ddMMyyyy HH:mm", Locale.ITALIAN);
 		String formatHHMM = sdf.format(now);
-		boolean isTime = formatHHMM.equals(format + " 07:30");
-//		System.out.println(String.format("%s.equals(%s) = %s", formatHHMM, (format + " 23:48"), isTime));
+		boolean isTime = formatHHMM.equals(format + " 08:30");
+		// System.out.println(String.format("%s.equals(%s) = %s", formatHHMM,
+		// (format + " 23:48"), isTime));
 		return isTime;
 	}
 
@@ -181,11 +211,11 @@ public class FullscreenActivity extends Activity {
 	}
 
 	private boolean checkDataFile() {
-		boolean exist = ImportaFarmacieDaFile.existPharmListFile();
+		boolean exist = ImportaFarmacieDaFile.existPharmListFile(this);
 		if (!exist) {
 			createAlert("FILE CON ELENCO FARMACIE MANCANTE");
 		}
-		exist = ImportaFarmacieDaFile.existScheduleFile();
+		exist = ImportaFarmacieDaFile.existScheduleFile(this);
 		if (!exist)
 			createAlert("FILE CON ELENCO TURNI MANCANTE");
 
@@ -202,15 +232,21 @@ public class FullscreenActivity extends Activity {
 	}
 
 	public void loadDataFromFile() {
-		System.out.println("INIZIO CARICAMENTO DATI");
+		// System.out.println("INIZIO CARICAMENTO DATI");
+		Date dataTurni = null;
 		if (checkDataFile()) {
-			pharmMap = ImportaFarmacieDaFile.readTextFile(this);
+			try {
+				pharmMap = ImportaFarmacieDaFile.readTextFile(this);
+			} catch (IOException e) {
+				e.printStackTrace();
+				createAlert("ERRORE DURANTE IL CARICAMENTO DEI FILE:" + e);
+			}
 			Map<String, List<Farmacia>> turniFile = ImportaFarmacieDaFile.readTurniFile(this, pharmMap);
 			// Toast.makeText(this, "CARICAMENTO COMPLETATO",
 			// Toast.LENGTH_LONG).show();
-			prepareList(turniFile);
+			dataTurni = prepareList(turniFile);
 		}
-		showList();
+		showList(dataTurni);
 	}
 
 	private void aggiornaIntestazione(Intestazione intestazione) {
@@ -269,7 +305,7 @@ public class FullscreenActivity extends Activity {
 		}
 	}
 
-	private void showList() {
+	private void showList(Date dataTurni) {
 
 		// prepared arraylist and passed it to the Adapter class
 		mAdapter = new GridviewAdapter(this, dailyListPharm);
@@ -283,7 +319,9 @@ public class FullscreenActivity extends Activity {
 		// SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy",
 		// Locale.ITALIAN);
 		SimpleDateFormat sdf = new SimpleDateFormat("EEEE dd MMMM yyyy", Locale.ITALIAN);
-		String text = sdf.format(new Date());
+		if (dataTurni == null)
+			dataTurni = new Date();
+		String text = sdf.format(dataTurni);
 
 		dateText.setText(text.toUpperCase(Locale.ITALY));
 
@@ -346,11 +384,23 @@ public class FullscreenActivity extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	private void prepareList(Map<String, List<Farmacia>> turniFile) {
+	private Date prepareList(Map<String, List<Farmacia>> turniFile) {
+		checkTime();
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.ITALIAN);
-		String today = sdf.format(new Date());
-		dailyListPharm = turniFile.get(today);
-
+		String day = null;
+		Date dataTurni = null;
+		if (checkTime()) {
+			dataTurni = new Date();
+			day = sdf.format(dataTurni);
+		} else {
+			Calendar instance = Calendar.getInstance();
+			instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) - 1);
+			dataTurni = new Date(instance.getTimeInMillis());
+			day = sdf.format(dataTurni);
+		}
+		System.out.println(day);
+		dailyListPharm = turniFile.get(day);
+		return dataTurni;
 	}
 
 	public void setKeepScreenOn(Activity activity, boolean keepScreenOn) {

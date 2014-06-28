@@ -4,7 +4,7 @@
     <string name="app_name">Farmacia di turno Mantova</string>
     <string name="about">Contatti</string>
     <string name="genericString">" ---- "</string>
-    <string name="chiamateUrgenti">"PER LA DISPENSAZIONE DI MEDICINALI DURANTE LE ORE NOTTURNE A BATTENTI CHIUSI SONO DOVUTI EURO "</string>
+    <string name="chiamateUrgenti">"PER LA DISPENSAZIONE DI MEDICINALI DURANTE LE ORE NOTTURNE A BATTENTI CHIUSI SONO DOVUTI EURO"</string>
     <string name="chiamateUrgentiCostoDefault">3,87</string>
     <string name="impostazioni">Impostazioni</string>
     <string name="modificaCostoChiamateUrgenti">Imposta costo chiamata Urgenza</string>

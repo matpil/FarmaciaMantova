@@ -81,24 +81,25 @@
         android:textSize="18sp" />
 
     <Button
-        android:id="@+id/buttonAnnulla"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/editTelefono"
-        android:layout_below="@+id/editTelefono"
-        android:layout_marginRight="140dp"
-        android:layout_marginTop="125dp"
-        android:text="ANNULLA"
-        android:textColor="#ffffff" />
-
-    <Button
         android:id="@+id/buttonSalva"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonAnnulla"
-        android:layout_alignBottom="@+id/buttonAnnulla"
-        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/editTelefono"
+        android:layout_marginRight="26dp"
+        android:layout_marginTop="55dp"
+        android:layout_toLeftOf="@+id/buttonAnnulla"
         android:text="SALVA"
+        android:textColor="#ffffff" />
+
+    <Button
+        android:id="@+id/buttonAnnulla"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonSalva"
+        android:layout_alignBottom="@+id/buttonSalva"
+        android:layout_alignRight="@+id/editTelefono"
+        android:layout_marginRight="152dp"
+        android:text="ANNULLA"
         android:textColor="#ffffff" />
 
 </RelativeLayout>

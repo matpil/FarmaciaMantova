@@ -56,4 +56,9 @@ public class Farmacia {
 	public void setNote(String note) {
 		this.note = note;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("%s - %s ", getCodice(), getNote());
+	}
 }

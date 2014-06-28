@@ -138,7 +138,7 @@ public class SottoMenu {
 		SharedPreferences prefs = this.act.getSharedPreferences(MY_PREFERENCES, Context.MODE_PRIVATE);
 		// Leggiamo l'informazione associata alla proprietà TEXT_DATA
 		String textData = prefs.getString(TEXT_DATA_KEY, null);
-		System.out.println("checkDefaultTicketValue -> " + textData);
+//		System.out.println("checkDefaultTicketValue -> " + textData);
 		if (textData == null)
 			this.act.showDialog(CAMBIA_COSTO_CHIAMATA);
 	}
