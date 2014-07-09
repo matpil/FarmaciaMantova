@@ -1,4 +1,4 @@
-package com.matpil.farmacia.util;
+package com.matpil.farmacia.other;
 
 import android.app.Activity;
 import android.os.Build;

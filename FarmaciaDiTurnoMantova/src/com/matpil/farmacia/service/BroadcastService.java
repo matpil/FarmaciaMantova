@@ -1,4 +1,4 @@
-package com.matpil.farmacia;
+package com.matpil.farmacia.service;
 
 import android.app.Service;
 import android.content.Intent;

@@ -32,12 +32,12 @@
             android:label="@string/title_activity_impostazioni" >
         </activity>
         <activity
-            android:name="com.matpil.farmacia.util.CreaIntestazione"
+            android:name="com.matpil.farmacia.intestazione.CreaIntestazione"
             android:label="@string/title_activity_intestazione" >
         </activity>
         <activity android:name="ar.com.daidalos.afiledialog.FileChooserActivity" />
 
-        <service android:name=".BroadcastService" />
+        <service android:name="com.matpil.farmacia.service.BroadcastService" />
     </application>
 
 </manifest>

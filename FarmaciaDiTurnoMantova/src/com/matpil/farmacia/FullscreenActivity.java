@@ -1,12 +1,7 @@
 package com.matpil.farmacia;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -24,7 +19,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -35,16 +29,17 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.matpil.farmacia.adapter.GridviewAdapter;
+import com.matpil.farmacia.intestazione.CreaIntestazione;
 import com.matpil.farmacia.intestazione.GestioneIntestazione;
+import com.matpil.farmacia.menu.SottoMenu;
 import com.matpil.farmacia.model.Farmacia;
 import com.matpil.farmacia.model.InfoFarmacie;
 import com.matpil.farmacia.model.Intestazione;
-import com.matpil.farmacia.parser.AggiornamentoFileDaSdCard;
-import com.matpil.farmacia.parser.ImportaFarmacieDaFile;
-import com.matpil.farmacia.util.CreaIntestazione;
-import com.matpil.farmacia.util.GridviewAdapter;
-import com.matpil.farmacia.util.SottoMenu;
-import com.matpil.farmacia.util.SystemUiHider;
+import com.matpil.farmacia.other.SystemUiHider;
+import com.matpil.farmacia.service.BroadcastService;
+import com.matpil.farmacia.util.DataLoader;
+import com.matpil.farmacia.util.TimeHelper;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -70,18 +65,12 @@ public class FullscreenActivity extends ActionBarActivity {
 	 */
 	private SystemUiHider mSystemUiHider;
 
-	private GridviewAdapter mAdapter;
-	private List<Farmacia> dailyListPharm;
-	private Map<String, Farmacia> pharmMap;
-	private GridView gridView;
-	private SottoMenu sottoMenu;
-	private String timeUpdate = null;
-	private String timeEndUpdate = null;
+	private SottoMenu sottoMenu = new SottoMenu(this);
+	private DataLoader loader = new DataLoader(this);
 	private boolean actionBarShow = false;
-	private Date currentDate = new Date();
-	private String lastUpdate = null;
+	private String startHour = null;
+	private String endHour = null;
 
-	// private static final String TAG = "BroadcastTest";
 	private Intent intent;
 
 	@Override
@@ -90,22 +79,9 @@ public class FullscreenActivity extends ActionBarActivity {
 
 		setContentView(R.layout.activity_fullscreen);
 
-		manageActionBar();
+		init();
 
-		boolean checkDataFile = checkDataFile();
-
-		if (checkDataFile) {
-			loadDataFromFile();
-		}
-
-		manageCurrentDate();
-
-		managePeriod();
-
-		GestioneIntestazione.caricaIntestazione(this);
-		sottoMenu = new SottoMenu(this);
-		sottoMenu.checkDefaultCallValue();
-		sottoMenu.updatePreferencesData();
+		displayInfo();
 
 		otherConfig();
 
@@ -113,49 +89,53 @@ public class FullscreenActivity extends ActionBarActivity {
 
 	}// onCreate
 
-	private void managePeriod() {
-		if (timeUpdate != null && timeEndUpdate != null) {
-			TextView periodTV = (TextView) findViewById(R.id.period);
-			String periodText = getString(R.string.period);
-			String msg = String.format("Aggiornamento %s con valori %s - %s", periodText, timeUpdate, timeEndUpdate);
-			periodText = periodText.replace("start", timeUpdate);
-			periodText = periodText.replace("end", timeEndUpdate);
-			periodTV.setText(periodText);
-			// int idx = timeUpdate.indexOf(".");
-			// int hour = Integer.parseInt(timeEndUpdate.substring(0, idx));
-			// int minute = Integer.parseInt(timeEndUpdate.substring(idx + 1));
-			System.out.println(msg);
-		}
-	}
+	private void displayInfo() {
+		// Caricamento dati
+		caricamentoDati();
 
-	private void manageCurrentDate() {
-		Date now = new Date();
-		Calendar instance = Calendar.getInstance();
-		int idx = timeUpdate.indexOf(".");
-		int hour = Integer.parseInt(timeUpdate.substring(0, idx));
-		int minute = Integer.parseInt(timeUpdate.substring(idx + 1));
-		instance.set(Calendar.HOUR_OF_DAY, hour);
-		instance.set(Calendar.MINUTE, minute);
-		instance.set(Calendar.SECOND, 0);
-		System.out.println(now + " after " + instance.getTime() + ": " + (now.after(instance.getTime())));
-		if (now.after(instance.getTime())) {
-			currentDate = new Date();
-		} else {
-			instance.setTime(now);
-			instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) - 1);
-			currentDate = new Date(instance.getTimeInMillis());
-		}
-		System.out.println("CHOOSE_DAY -> " + currentDate);
-		setCurrentDate();
-	}
-
-	private void setCurrentDate() {
+		// imposto data
 		TextView dateText = (TextView) findViewById(R.id.dateTv);
-		SimpleDateFormat sdf = new SimpleDateFormat("EEEE dd MMMM yyyy", Locale.ITALIAN);
-		if (currentDate == null)
-			manageCurrentDate();
-		String text = sdf.format(currentDate);
-		dateText.setText(text.toUpperCase(Locale.ITALY));
+		dateText.setText(TimeHelper.retrieveDateFormatted("EEEE dd MMMM yyyy", loader.getDataCorrente()));
+		// imposto range orario
+		String periodText = getString(R.string.period);
+		TextView periodTV = (TextView) findViewById(R.id.period);
+		periodTV.setText(TimeHelper.retrieveRangeHour(periodText, startHour, endHour));
+	}
+
+	private Date caricamentoDati() {
+		boolean caricamentoEffettuato = loader.caricaDati();
+		InfoFarmacie infoFarmacie = null;
+		Date currentDate = null;
+		if (!caricamentoEffettuato) {
+			createAlert("Errore durante il caricamento file dati");
+		} else {
+			infoFarmacie = loader.recuperaListaFarmaciePerGiorno(startHour);
+			List<Farmacia> listPharm = infoFarmacie.getListPharm();
+			currentDate = TimeHelper.retrieveDate(this.startHour);
+			this.startHour = infoFarmacie.getTimeUpdate();
+			this.endHour = loader.recuperaOrarioAperturaPerGiorno(TimeHelper.retrieveTomorrowRightDateFormatted("dd/MM/yyyy", this.startHour));
+			showList(listPharm);
+		}
+		return currentDate == null ? new Date() : currentDate;
+	}
+
+	private void showList(List<Farmacia> listPharm) {
+		// prepared arraylist and passed it to the Adapter class
+		GridviewAdapter mAdapter = new GridviewAdapter(this, listPharm);
+		// Set custom adapter to gridview
+		GridView gridView = (GridView) findViewById(R.id.gridView1);
+		gridView.setAdapter(mAdapter);
+
+		setKeepScreenOn(this, true);
+
+	}
+
+	private void init() {
+		// Gestione action bar
+		manageActionBar();
+		// Recupero dati salvati in SharedPreferences
+		sottoMenu.checkDefaultCallValue();
+		sottoMenu.updatePreferencesData();
 	}
 
 	private void manageActionBar() {
@@ -193,29 +173,21 @@ public class FullscreenActivity extends ActionBarActivity {
 		});
 	}
 
+	private void createAlert(String msg) {
+		new AlertDialog.Builder(this).setTitle(msg).setNeutralButton("CONTINUA", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// do nothing...
+			}
+		}).create().show();
+	}
+
 	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			updateUI(intent);
 		}
 	};
-
-	private void updateUI(Intent intent) {
-//		boolean updated = false;
-//		SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy", Locale.ITALIAN);
-//		String currentUpdate = sdf.format(currentDate);
-//		if (lastUpdate == null)
-//			updated = false;
-//		else {
-//			updated = lastUpdate.equals(currentUpdate);
-//		}
-		if (checkTime()) {
-			System.out.println("CURRENT_DATE -> " + currentDate);
-			loadDataFromFile();
-			Toast.makeText(this, "AGGIORNAMENTO COMPLETATO", Toast.LENGTH_LONG).show();
-//			lastUpdate = currentUpdate;
-		}
-	}
 
 	@Override
 	public void onResume() {
@@ -231,31 +203,23 @@ public class FullscreenActivity extends ActionBarActivity {
 		stopService(intent);
 	}
 
-	private boolean checkTime() {
-		if (timeUpdate == null) {
-			currentDate = new Date();
-			return true;
+	private void updateUI(Intent intent) {
+		String dtFormat = TimeHelper.retrieveDateFormattedWithHourAndMin(endHour);
+		String dtCheck = TimeHelper.retrieveDateFormatted("dd/MM/yyyy HH:mm", new Date());
+		System.out.println(String.format("%s - %s", dtFormat, dtCheck));
+		if (dtFormat.equals(dtCheck)) {
+			cleanData();
+			displayInfo();
+			Toast.makeText(this, "AGGIORNAMENTO COMPLETATO", Toast.LENGTH_LONG).show();
+			// lastUpdate = currentUpdate;
 		}
-		Date now = new Date();
-		int idx = timeUpdate.indexOf(".");
-		int hour = Integer.parseInt(timeEndUpdate.substring(0, idx));
-		int minute = Integer.parseInt(timeEndUpdate.substring(idx + 1));
+	}
 
-		SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy", Locale.ITALIAN);
-		String format = sdf.format(now);
-		sdf = new SimpleDateFormat("ddMMyyyy H:mm", Locale.ITALIAN);
-		String formatHHMM = sdf.format(now);
-		boolean isTime = formatHHMM.equals(String.format("%s %s:%s", format, hour, minute));
-		System.out.println(String.format("formatHHMM %s = format %s", formatHHMM, String.format("%s %s:%s", format, hour, minute)));
-		if (isTime) {
-			currentDate = new Date();
-		} else {
-			Calendar instance = Calendar.getInstance();
-			instance.setTime(now);
-			instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) - 1);
-			currentDate = instance.getTime();
-		}
-		return isTime;
+	private void cleanData() {
+		this.startHour = null;
+		this.endHour = null;
+		this.loader.cleanDataCorrente();
+
 	}
 
 	private void otherConfig() {
@@ -296,45 +260,6 @@ public class FullscreenActivity extends ActionBarActivity {
 		});
 	}
 
-	private boolean checkDataFile() {
-		boolean exist = ImportaFarmacieDaFile.existPharmListFile(this);
-		if (!exist) {
-			createAlert("FILE CON ELENCO FARMACIE MANCANTE");
-		}
-		exist = ImportaFarmacieDaFile.existScheduleFile(this);
-		if (!exist)
-			createAlert("FILE CON ELENCO TURNI MANCANTE");
-
-		return exist;
-	}
-
-	private void createAlert(String msg) {
-		new AlertDialog.Builder(this).setTitle(msg).setNeutralButton("CONTINUA", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// do nothing...
-			}
-		}).create().show();
-	}
-
-	private void loadDataFromFile() {
-		// System.out.println("INIZIO CARICAMENTO DATI");
-		// Date dataTurni = null;
-		if (checkDataFile()) {
-			try {
-				pharmMap = ImportaFarmacieDaFile.readTextFile(this);
-			} catch (IOException e) {
-				e.printStackTrace();
-				createAlert("ERRORE DURANTE IL CARICAMENTO DEI FILE:" + e);
-			}
-			Map<String, InfoFarmacie> turniFile = ImportaFarmacieDaFile.readTurniFile(this, pharmMap);
-			// Toast.makeText(this, "CARICAMENTO COMPLETATO",
-			// Toast.LENGTH_LONG).show();
-			prepareList(turniFile);
-		}
-		showList();
-	}
-
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
@@ -343,23 +268,6 @@ public class FullscreenActivity extends ActionBarActivity {
 			Intestazione intestazione = (Intestazione) data.getSerializableExtra("newCode");
 			GestioneIntestazione.salvaIntestazione(intestazione, this);
 		}
-	}
-
-	private void showList() {
-
-		// prepared arraylist and passed it to the Adapter class
-		mAdapter = new GridviewAdapter(this, dailyListPharm);
-
-		// Set custom adapter to gridview
-		gridView = (GridView) findViewById(R.id.gridView1);
-		gridView.setAdapter(mAdapter);
-
-		// manageCurrentDate();
-		setCurrentDate();
-		managePeriod();
-
-		setKeepScreenOn(this, true);
-
 	}
 
 	@Override
@@ -382,8 +290,8 @@ public class FullscreenActivity extends ActionBarActivity {
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						copyFileFromSdCard();
-						loadDataFromFile();
+						// TODO COPIA FILE DA SD A MEMORIA INTERNA
+						// TODO AGGIORNARE FILE DATI
 					}
 
 				}).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
@@ -391,14 +299,6 @@ public class FullscreenActivity extends ActionBarActivity {
 					public void onClick(DialogInterface dialog, int which) {
 					}
 				}).create();
-	}
-
-	private void copyFileFromSdCard() {
-		boolean copied = AggiornamentoFileDaSdCard.copyFiles(this);
-		if (copied)
-			createAlert("AGGIORNAMENTO AVVENUTO CON SUCCESSO");
-		else
-			createAlert("ERRORE DURANTE L'AGGIORNAMENTO DEI DATI");
 	}
 
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -426,48 +326,6 @@ public class FullscreenActivity extends ActionBarActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	private void prepareList(Map<String, InfoFarmacie> turniFile) {
-		// chooseDay();
-		String day = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.ITALIAN);
-		// Date dataTurni = chooseDay();
-		day = sdf.format(currentDate);
-		// System.out.println(day);
-		InfoFarmacie info = turniFile.get(day);
-		dailyListPharm = info.getListPharm();
-		timeUpdate = info.getTimeUpdate();
-		// recupero l'orario di aggiornamento per il giorno successivo
-		Calendar instance = Calendar.getInstance();
-		instance.setTime(currentDate);
-		instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) + 1);
-		Date dataTurni = new Date(instance.getTimeInMillis());
-		String format = sdf.format(dataTurni);
-		timeEndUpdate = turniFile.get(format).getTimeUpdate();
-		String msg = String.format("timeUdate %s per giorno %s; timeEndUpdate %s per giorno %s", timeUpdate, day, timeEndUpdate, format);
-		System.out.println(msg);
-
-		// return dataTurni;
-	}
-
-	// private void chooseDay() {
-	// if (checkTime()) {
-	// currentDate = new Date();
-	// } else {
-	// Calendar instance = Calendar.getInstance();
-	// instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) -
-	// 1);
-	// currentDate = new Date(instance.getTimeInMillis());
-	// }
-	// }
-
-	public void setKeepScreenOn(Activity activity, boolean keepScreenOn) {
-		if (keepScreenOn) {
-			activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		} else {
-			activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		}
-	}
-
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
@@ -478,28 +336,13 @@ public class FullscreenActivity extends ActionBarActivity {
 		delayedHide(100);
 	}
 
-	/**
-	 * Touch listener to use for in-layout UI controls to delay hiding the
-	 * system UI. This is to prevent the jarring behavior of controls going away
-	 * while interacting with activity UI.
-	 */
-	View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
-		@Override
-		public boolean onTouch(View view, MotionEvent motionEvent) {
-			if (AUTO_HIDE) {
-				delayedHide(AUTO_HIDE_DELAY_MILLIS);
-			}
-			return false;
+	public void setKeepScreenOn(Activity activity, boolean keepScreenOn) {
+		if (keepScreenOn) {
+			activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		} else {
+			activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		}
-	};
-
-	Handler mHideHandler = new Handler();
-	Runnable mHideRunnable = new Runnable() {
-		@Override
-		public void run() {
-			mSystemUiHider.hide();
-		}
-	};
+	}
 
 	/**
 	 * Schedules a call to hide() in [delay] milliseconds, canceling any
@@ -509,5 +352,30 @@ public class FullscreenActivity extends ActionBarActivity {
 		mHideHandler.removeCallbacks(mHideRunnable);
 		mHideHandler.postDelayed(mHideRunnable, delayMillis);
 	}
+
+	// /**
+	// * Touch listener to use for in-layout UI controls to delay hiding the
+	// * system UI. This is to prevent the jarring behavior of controls going
+	// away
+	// * while interacting with activity UI.
+	// */
+	// View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener()
+	// {
+	// @Override
+	// public boolean onTouch(View view, MotionEvent motionEvent) {
+	// if (AUTO_HIDE) {
+	// delayedHide(AUTO_HIDE_DELAY_MILLIS);
+	// }
+	// return false;
+	// }
+	// };
+
+	Handler mHideHandler = new Handler();
+	Runnable mHideRunnable = new Runnable() {
+		@Override
+		public void run() {
+			mSystemUiHider.hide();
+		}
+	};
 
 }

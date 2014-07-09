@@ -1,4 +1,4 @@
-package com.matpil.farmacia.util;
+package com.matpil.farmacia.menu;
 
 import android.app.AlertDialog;
 import android.app.Dialog;

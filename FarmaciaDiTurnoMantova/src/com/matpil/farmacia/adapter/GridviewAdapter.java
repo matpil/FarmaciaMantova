@@ -1,4 +1,4 @@
-package com.matpil.farmacia.util;
+package com.matpil.farmacia.adapter;
 
 import java.util.List;
 

@@ -40,7 +40,7 @@ public class ImportaFarmacieDaFile {
 		}
 	}
 
-	public static Map<String, Farmacia> readTextFile(Context context) throws IOException {
+	public static Map<String, Farmacia> readPharmFile(Context context) throws IOException {
 		checkDir(context);
 		BufferedReader in = null;
 		Map<String, Farmacia> mapFarmacie = new HashMap<String, Farmacia>();
