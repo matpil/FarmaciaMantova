@@ -9,6 +9,19 @@ public class Farmacia {
 	private String telefono;
 	private String note;
 
+	public Farmacia() {
+
+	}
+
+	public Farmacia(Farmacia clone) {
+		setCodice(clone.getCodice());
+		setNome(clone.getNome());
+		setLocalità(clone.getLocalità());
+		setIndirizzo(clone.getIndirizzo());
+		setTelefono(clone.getTelefono());
+		setNote(clone.getNote());
+	}
+
 	public String getCodice() {
 		return codice;
 	}
@@ -56,7 +69,7 @@ public class Farmacia {
 	public void setNote(String note) {
 		this.note = note;
 	}
-	
+
 	@Override
 	public String toString() {
 		return String.format("%s - %s ", getCodice(), getNote());
