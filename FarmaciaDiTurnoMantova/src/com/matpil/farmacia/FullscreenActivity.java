@@ -95,7 +95,10 @@ public class FullscreenActivity extends ActionBarActivity {
 
 		// imposto data
 		TextView dateText = (TextView) findViewById(R.id.dateTv);
-		dateText.setText(TimeHelper.retrieveDateFormatted("EEEE dd MMMM yyyy", loader.getDataCorrente()));
+		Date toDisplay = loader.getDataCorrente();
+		if (toDisplay == null)
+			toDisplay = new Date();
+		dateText.setText(TimeHelper.retrieveDateFormatted("EEEE dd MMMM yyyy", toDisplay));
 		// imposto range orario
 		String periodText = getString(R.string.period);
 		TextView periodTV = (TextView) findViewById(R.id.period);
@@ -204,14 +207,16 @@ public class FullscreenActivity extends ActionBarActivity {
 	}
 
 	private void updateUI(Intent intent) {
-		String dtFormat = TimeHelper.retrieveDateFormattedWithHourAndMin(endHour);
-		String dtCheck = TimeHelper.retrieveDateFormatted("dd/MM/yyyy HH:mm", new Date());
-		System.out.println(String.format("%s - %s", dtFormat, dtCheck));
-		if (dtFormat.equals(dtCheck)) {
-			cleanData();
-			displayInfo();
-			Toast.makeText(this, "AGGIORNAMENTO COMPLETATO", Toast.LENGTH_LONG).show();
-			// lastUpdate = currentUpdate;
+		if (this.endHour != null) {
+			String dtFormat = TimeHelper.retrieveDateFormattedWithHourAndMin(endHour);
+			String dtCheck = TimeHelper.retrieveDateFormatted("dd/MM/yyyy HH:mm", new Date());
+			System.out.println(String.format("%s - %s", dtFormat, dtCheck));
+			if (dtFormat.equals(dtCheck)) {
+				cleanData();
+				displayInfo();
+				Toast.makeText(this, "AGGIORNAMENTO COMPLETATO", Toast.LENGTH_LONG).show();
+				// lastUpdate = currentUpdate;
+			}
 		}
 	}
 
