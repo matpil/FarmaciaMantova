@@ -17,7 +17,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -35,8 +35,11 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.matpil.farmacia.intestazione.GestioneIntestazione;
 import com.matpil.farmacia.model.Farmacia;
+import com.matpil.farmacia.model.InfoFarmacie;
 import com.matpil.farmacia.model.Intestazione;
+import com.matpil.farmacia.parser.AggiornamentoFileDaSdCard;
 import com.matpil.farmacia.parser.ImportaFarmacieDaFile;
 import com.matpil.farmacia.util.CreaIntestazione;
 import com.matpil.farmacia.util.GridviewAdapter;
@@ -67,17 +70,16 @@ public class FullscreenActivity extends ActionBarActivity {
 	 */
 	private SystemUiHider mSystemUiHider;
 
-	private final static String INTESTAZIONE = "Intestazione";
-	private final static String INTESTAZIONE_NOME_FARMACIA = "IntestazioneNomeFarmacia";
-	private final static String INTESTAZIONE_INDIRIZZO = "IntestazioneIndirizzo";
-	private final static String INTESTAZIONE_TELEFONO = "IntestazioneTelefono";
-
 	private GridviewAdapter mAdapter;
 	private List<Farmacia> dailyListPharm;
 	private Map<String, Farmacia> pharmMap;
 	private GridView gridView;
 	private SottoMenu sottoMenu;
+	private String timeUpdate = null;
+	private String timeEndUpdate = null;
 	private boolean actionBarShow = false;
+	private Date currentDate = new Date();
+	private String lastUpdate = null;
 
 	// private static final String TAG = "BroadcastTest";
 	private Intent intent;
@@ -90,24 +92,71 @@ public class FullscreenActivity extends ActionBarActivity {
 
 		manageActionBar();
 
-		caricaIntestazione();
 		boolean checkDataFile = checkDataFile();
 
 		if (checkDataFile) {
-			sottoMenu = new SottoMenu(this);
-
-			sottoMenu.checkDefaultCallValue();
-			sottoMenu.updatePreferencesData();
-
 			loadDataFromFile();
-
 		}
+
+		manageCurrentDate();
+
+		managePeriod();
+
+		GestioneIntestazione.caricaIntestazione(this);
+		sottoMenu = new SottoMenu(this);
+		sottoMenu.checkDefaultCallValue();
+		sottoMenu.updatePreferencesData();
 
 		otherConfig();
 
 		intent = new Intent(this, BroadcastService.class);
 
 	}// onCreate
+
+	private void managePeriod() {
+		if (timeUpdate != null && timeEndUpdate != null) {
+			TextView periodTV = (TextView) findViewById(R.id.period);
+			String periodText = getString(R.string.period);
+			String msg = String.format("Aggiornamento %s con valori %s - %s", periodText, timeUpdate, timeEndUpdate);
+			periodText = periodText.replace("start", timeUpdate);
+			periodText = periodText.replace("end", timeEndUpdate);
+			periodTV.setText(periodText);
+			// int idx = timeUpdate.indexOf(".");
+			// int hour = Integer.parseInt(timeEndUpdate.substring(0, idx));
+			// int minute = Integer.parseInt(timeEndUpdate.substring(idx + 1));
+			System.out.println(msg);
+		}
+	}
+
+	private void manageCurrentDate() {
+		Date now = new Date();
+		Calendar instance = Calendar.getInstance();
+		int idx = timeUpdate.indexOf(".");
+		int hour = Integer.parseInt(timeUpdate.substring(0, idx));
+		int minute = Integer.parseInt(timeUpdate.substring(idx + 1));
+		instance.set(Calendar.HOUR_OF_DAY, hour);
+		instance.set(Calendar.MINUTE, minute);
+		instance.set(Calendar.SECOND, 0);
+		System.out.println(now + " after " + instance.getTime() + ": " + (now.after(instance.getTime())));
+		if (now.after(instance.getTime())) {
+			currentDate = new Date();
+		} else {
+			instance.setTime(now);
+			instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) - 1);
+			currentDate = new Date(instance.getTimeInMillis());
+		}
+		System.out.println("CHOOSE_DAY -> " + currentDate);
+		setCurrentDate();
+	}
+
+	private void setCurrentDate() {
+		TextView dateText = (TextView) findViewById(R.id.dateTv);
+		SimpleDateFormat sdf = new SimpleDateFormat("EEEE dd MMMM yyyy", Locale.ITALIAN);
+		if (currentDate == null)
+			manageCurrentDate();
+		String text = sdf.format(currentDate);
+		dateText.setText(text.toUpperCase(Locale.ITALY));
+	}
 
 	private void manageActionBar() {
 		final ActionBar actionBar = getSupportActionBar();
@@ -127,6 +176,21 @@ public class FullscreenActivity extends ActionBarActivity {
 				}
 			}
 		});
+
+		View tLayout = findViewById(R.id.tableLayout);
+		tLayout.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				if (!actionBarShow) {
+					actionBar.show();
+					actionBarShow = true;
+				} else {
+					actionBar.hide();
+					actionBarShow = false;
+				}
+			}
+		});
 	}
 
 	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -137,13 +201,20 @@ public class FullscreenActivity extends ActionBarActivity {
 	};
 
 	private void updateUI(Intent intent) {
+//		boolean updated = false;
+//		SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy", Locale.ITALIAN);
+//		String currentUpdate = sdf.format(currentDate);
+//		if (lastUpdate == null)
+//			updated = false;
+//		else {
+//			updated = lastUpdate.equals(currentUpdate);
+//		}
 		if (checkTime()) {
+			System.out.println("CURRENT_DATE -> " + currentDate);
 			loadDataFromFile();
 			Toast.makeText(this, "AGGIORNAMENTO COMPLETATO", Toast.LENGTH_LONG).show();
+//			lastUpdate = currentUpdate;
 		}
-		// else {
-		// Toast.makeText(this, "WAIT FOR UPDATE", Toast.LENGTH_LONG).show();
-		// }
 	}
 
 	@Override
@@ -161,14 +232,29 @@ public class FullscreenActivity extends ActionBarActivity {
 	}
 
 	private boolean checkTime() {
+		if (timeUpdate == null) {
+			currentDate = new Date();
+			return true;
+		}
 		Date now = new Date();
+		int idx = timeUpdate.indexOf(".");
+		int hour = Integer.parseInt(timeEndUpdate.substring(0, idx));
+		int minute = Integer.parseInt(timeEndUpdate.substring(idx + 1));
+
 		SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy", Locale.ITALIAN);
 		String format = sdf.format(now);
-		sdf = new SimpleDateFormat("ddMMyyyy HH:mm", Locale.ITALIAN);
+		sdf = new SimpleDateFormat("ddMMyyyy H:mm", Locale.ITALIAN);
 		String formatHHMM = sdf.format(now);
-		boolean isTime = formatHHMM.equals(format + " 08:30");
-		// System.out.println(String.format("%s.equals(%s) = %s", formatHHMM,
-		// (format + " 23:48"), isTime));
+		boolean isTime = formatHHMM.equals(String.format("%s %s:%s", format, hour, minute));
+		System.out.println(String.format("formatHHMM %s = format %s", formatHHMM, String.format("%s %s:%s", format, hour, minute)));
+		if (isTime) {
+			currentDate = new Date();
+		} else {
+			Calendar instance = Calendar.getInstance();
+			instance.setTime(now);
+			instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) - 1);
+			currentDate = instance.getTime();
+		}
 		return isTime;
 	}
 
@@ -226,14 +312,14 @@ public class FullscreenActivity extends ActionBarActivity {
 		new AlertDialog.Builder(this).setTitle(msg).setNeutralButton("CONTINUA", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				// loadDataFromFile();
+				// do nothing...
 			}
 		}).create().show();
 	}
 
-	public void loadDataFromFile() {
+	private void loadDataFromFile() {
 		// System.out.println("INIZIO CARICAMENTO DATI");
-		Date dataTurni = null;
+		// Date dataTurni = null;
 		if (checkDataFile()) {
 			try {
 				pharmMap = ImportaFarmacieDaFile.readTextFile(this);
@@ -241,58 +327,12 @@ public class FullscreenActivity extends ActionBarActivity {
 				e.printStackTrace();
 				createAlert("ERRORE DURANTE IL CARICAMENTO DEI FILE:" + e);
 			}
-			Map<String, List<Farmacia>> turniFile = ImportaFarmacieDaFile.readTurniFile(this, pharmMap);
+			Map<String, InfoFarmacie> turniFile = ImportaFarmacieDaFile.readTurniFile(this, pharmMap);
 			// Toast.makeText(this, "CARICAMENTO COMPLETATO",
 			// Toast.LENGTH_LONG).show();
-			dataTurni = prepareList(turniFile);
+			prepareList(turniFile);
 		}
-		showList(dataTurni);
-	}
-
-	private void aggiornaIntestazione(Intestazione intestazione) {
-		if (intestazione != null) {
-			((TextView) findViewById(R.id.nomeFarmaciaTV)).setText(intestazione.getNomeFarmacia());
-			((TextView) findViewById(R.id.indirizzoTV)).setText(intestazione.getIndirizzo());
-			String tel = String.format("tel. %s", intestazione.getTelefono());
-			((TextView) findViewById(R.id.telefonoTV)).setText(tel);
-		}
-	}
-
-	private void salvaIntestazione(Intestazione intestazione) {
-		// Otteniamo il riferimento alle Preferences
-		SharedPreferences prefs = this.getSharedPreferences(INTESTAZIONE, Context.MODE_PRIVATE);
-		// Otteniamo il corrispondente Editor
-		SharedPreferences.Editor editor = prefs.edit();
-		// Modifichiamo il valore con quello inserito nell'EditText
-		if (intestazione.getNomeFarmacia() != null) {
-			// Lo salviamo nelle Preferences
-			editor.putString(INTESTAZIONE_NOME_FARMACIA, intestazione.getNomeFarmacia());
-			editor.commit();
-		}
-		if (intestazione.getIndirizzo() != null) {
-			// Lo salviamo nelle Preferences
-			editor.putString(INTESTAZIONE_INDIRIZZO, intestazione.getIndirizzo());
-			editor.commit();
-		}
-		if (intestazione.getTelefono() != null) {
-			// Lo salviamo nelle Preferences
-			editor.putString(INTESTAZIONE_TELEFONO, intestazione.getTelefono());
-			editor.commit();
-		}
-		aggiornaIntestazione(intestazione);
-	}
-
-	private void caricaIntestazione() {
-		SharedPreferences prefs = this.getSharedPreferences(INTESTAZIONE, Context.MODE_PRIVATE);
-		String nomeFarmacia = prefs.getString(INTESTAZIONE_NOME_FARMACIA, null);
-		String indirizzo = prefs.getString(INTESTAZIONE_INDIRIZZO, null);
-		String telefono = prefs.getString(INTESTAZIONE_TELEFONO, null);
-		Intestazione intestazione = new Intestazione();
-		intestazione.setNomeFarmacia(nomeFarmacia);
-		intestazione.setIndirizzo(indirizzo);
-		intestazione.setTelefono(telefono);
-		if (intestazione.isModificato())
-			aggiornaIntestazione(intestazione);
+		showList();
 	}
 
 	@Override
@@ -301,11 +341,11 @@ public class FullscreenActivity extends ActionBarActivity {
 		// System.out.println("CODICE RICEVUTO DA ACTIVITY -> " + code);
 		if (resultCode == Activity.RESULT_OK) {
 			Intestazione intestazione = (Intestazione) data.getSerializableExtra("newCode");
-			salvaIntestazione(intestazione);
+			GestioneIntestazione.salvaIntestazione(intestazione, this);
 		}
 	}
 
-	private void showList(Date dataTurni) {
+	private void showList() {
 
 		// prepared arraylist and passed it to the Adapter class
 		mAdapter = new GridviewAdapter(this, dailyListPharm);
@@ -314,16 +354,9 @@ public class FullscreenActivity extends ActionBarActivity {
 		gridView = (GridView) findViewById(R.id.gridView1);
 		gridView.setAdapter(mAdapter);
 
-		TextView dateText = (TextView) findViewById(R.id.dateTv);
-		// GridView grid = (GridView) findViewById(R.id.gridView1);
-		// SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy",
-		// Locale.ITALIAN);
-		SimpleDateFormat sdf = new SimpleDateFormat("EEEE dd MMMM yyyy", Locale.ITALIAN);
-		if (dataTurni == null)
-			dataTurni = new Date();
-		String text = sdf.format(dataTurni);
-
-		dateText.setText(text.toUpperCase(Locale.ITALY));
+		// manageCurrentDate();
+		setCurrentDate();
+		managePeriod();
 
 		setKeepScreenOn(this, true);
 
@@ -349,10 +382,10 @@ public class FullscreenActivity extends ActionBarActivity {
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						// setTitle(titleText.getText());
-						// valoreBuono.setText(titleText.getText());
+						copyFileFromSdCard();
 						loadDataFromFile();
 					}
+
 				}).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -360,11 +393,20 @@ public class FullscreenActivity extends ActionBarActivity {
 				}).create();
 	}
 
+	private void copyFileFromSdCard() {
+		boolean copied = AggiornamentoFileDaSdCard.copyFiles(this);
+		if (copied)
+			createAlert("AGGIORNAMENTO AVVENUTO CON SUCCESSO");
+		else
+			createAlert("ERRORE DURANTE L'AGGIORNAMENTO DEI DATI");
+	}
+
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.layout.menu, menu);
 		return true;
 	}
 
+	@SuppressWarnings("deprecation")
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_mod_intestazione:
@@ -384,24 +426,39 @@ public class FullscreenActivity extends ActionBarActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	private Date prepareList(Map<String, List<Farmacia>> turniFile) {
-		checkTime();
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.ITALIAN);
+	private void prepareList(Map<String, InfoFarmacie> turniFile) {
+		// chooseDay();
 		String day = null;
-		Date dataTurni = null;
-		if (checkTime()) {
-			dataTurni = new Date();
-			day = sdf.format(dataTurni);
-		} else {
-			Calendar instance = Calendar.getInstance();
-			instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) - 1);
-			dataTurni = new Date(instance.getTimeInMillis());
-			day = sdf.format(dataTurni);
-		}
-		System.out.println(day);
-		dailyListPharm = turniFile.get(day);
-		return dataTurni;
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.ITALIAN);
+		// Date dataTurni = chooseDay();
+		day = sdf.format(currentDate);
+		// System.out.println(day);
+		InfoFarmacie info = turniFile.get(day);
+		dailyListPharm = info.getListPharm();
+		timeUpdate = info.getTimeUpdate();
+		// recupero l'orario di aggiornamento per il giorno successivo
+		Calendar instance = Calendar.getInstance();
+		instance.setTime(currentDate);
+		instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) + 1);
+		Date dataTurni = new Date(instance.getTimeInMillis());
+		String format = sdf.format(dataTurni);
+		timeEndUpdate = turniFile.get(format).getTimeUpdate();
+		String msg = String.format("timeUdate %s per giorno %s; timeEndUpdate %s per giorno %s", timeUpdate, day, timeEndUpdate, format);
+		System.out.println(msg);
+
+		// return dataTurni;
 	}
+
+	// private void chooseDay() {
+	// if (checkTime()) {
+	// currentDate = new Date();
+	// } else {
+	// Calendar instance = Calendar.getInstance();
+	// instance.set(Calendar.DAY_OF_MONTH, instance.get(Calendar.DAY_OF_MONTH) -
+	// 1);
+	// currentDate = new Date(instance.getTimeInMillis());
+	// }
+	// }
 
 	public void setKeepScreenOn(Activity activity, boolean keepScreenOn) {
 		if (keepScreenOn) {
