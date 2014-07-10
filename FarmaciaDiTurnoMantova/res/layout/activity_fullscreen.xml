@@ -13,45 +13,40 @@
     <TableRow
         android:id="@+id/intestazioneRow"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="match_parent"
         android:background="#00aa00"
         android:orientation="horizontal" >
 
         <GridLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:columnCount="2" >
+            android:layout_height="match_parent"
+            android:columnCount="2"
+            android:paddingTop="5dp" >
 
             <ImageView
                 android:id="@+id/imageView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:layout_gravity="left"
                 android:paddingBottom="1dp"
                 android:paddingLeft="100dp"
                 android:paddingRight="50dp"
                 android:src="@drawable/farmacie_di_turno_70" />
 
             <LinearLayout
-                android:layout_gravity="right"
+                android:layout_gravity="fill_horizontal"
+                android:gravity="center"
                 android:orientation="vertical" >
 
-                <LinearLayout
-                    android:layout_width="fill_parent"
+                <TextView
+                    android:id="@+id/nomeFarmaciaTV"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center" >
-
-                    <TextView
-                        android:id="@+id/nomeFarmaciaTV"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingRight="15dp"
-                        android:text="FARMACIA &quot;TORRAZZO&quot;  dr.ssa Adriana Marcella Bianco"
-                        android:textColor="#ffffff"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                    android:paddingRight="15dp"
+                    android:text="FARMACIA &quot;TORRAZZO&quot;  dr.ssa Adriana Marcella Bianco"
+                    android:textColor="#ffffff"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/indirizzoTV"
@@ -73,6 +68,7 @@
                     android:textSize="15sp"
                     android:textStyle="italic" />
             </LinearLayout>
+
         </GridLayout>
     </TableRow>
 
