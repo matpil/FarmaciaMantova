@@ -37,6 +37,7 @@ import com.matpil.farmacia.model.Farmacia;
 import com.matpil.farmacia.model.InfoFarmacie;
 import com.matpil.farmacia.model.Intestazione;
 import com.matpil.farmacia.other.SystemUiHider;
+import com.matpil.farmacia.parser.AggiornamentoFileDaSdCard;
 import com.matpil.farmacia.service.BroadcastService;
 import com.matpil.farmacia.util.DataLoader;
 import com.matpil.farmacia.util.TimeHelper;
@@ -290,13 +291,15 @@ public class FullscreenActivity extends ActionBarActivity {
 		return null;
 	}
 
-	public Dialog updateDataDialog() {
+	private Dialog updateDataDialog() {
 		return new AlertDialog.Builder(this).setTitle("AGGIORNARE GLI ARCHIVI DI FARMACIE E TURNI?")
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						// TODO COPIA FILE DA SD A MEMORIA INTERNA
-						// TODO AGGIORNARE FILE DATI
+						// COPIA FILE DA SD A MEMORIA INTERNA
+						copyFileFromSdCard();
+						// AGGIORNARE FILE DATI
+						caricamentoDati();
 					}
 
 				}).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
@@ -304,6 +307,14 @@ public class FullscreenActivity extends ActionBarActivity {
 					public void onClick(DialogInterface dialog, int which) {
 					}
 				}).create();
+	}
+	
+	private void copyFileFromSdCard() {
+		boolean copied = AggiornamentoFileDaSdCard.copyFiles(this);
+		if (copied)
+			createAlert("AGGIORNAMENTO AVVENUTO CON SUCCESSO");
+		else
+			createAlert("ERRORE DURANTE L'AGGIORNAMENTO DEI DATI");
 	}
 
 	public boolean onCreateOptionsMenu(Menu menu) {

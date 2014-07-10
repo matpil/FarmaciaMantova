@@ -21,31 +21,15 @@ import com.matpil.farmacia.model.InfoFarmacie;
 public class ImportaFarmacieDaFile {
 
 	protected final static String NOME_FILE_TURNI = "TurniFarmacieMantova.csv";
-	protected final static String NOME_FILE_ELENCO_FARMACIE = "ElencoFarmacieMantova.csv";
-	protected static String sdCardPath = null;
+	protected final static String NOME_FILE_ELENCO_FARMACIE = "ElencoFarmacieMantova.csv";	
 	protected static String internalMemoryPath = null;
-
-	static {
-		String[] directories = GetRemovableDevice.getDirectories();
-		for (int i = 0; i < directories.length; i++) {
-//			System.out.println(String.format("directory %s -> %s", i, directories[i]));
-
-			sdCardPath = directories[i]; //Environment.getExternalStorageDirectory().getAbsolutePath();
-			File elencoFarmacie = new File(String.format("%s/%s", sdCardPath, NOME_FILE_ELENCO_FARMACIE));
-			File fileTurni = new File(String.format("%s/%s", sdCardPath, NOME_FILE_TURNI));
-//			System.out.println("elencoFarmacie: " + elencoFarmacie.getAbsolutePath());
-//			System.out.println("fileTurni: " + fileTurni.getAbsolutePath());
-			if (elencoFarmacie.exists() && fileTurni.exists())
-				break;
-		}
-	}
 
 	public static Map<String, Farmacia> readPharmFile(Context context) throws IOException {
 		checkDir(context);
 		BufferedReader in = null;
 		Map<String, Farmacia> mapFarmacie = new HashMap<String, Farmacia>();
 		try {
-			File fileElencoFarmacie = new File(String.format("%s/%s", sdCardPath, NOME_FILE_ELENCO_FARMACIE));
+			File fileElencoFarmacie = new File(String.format("%s/%s", internalMemoryPath, NOME_FILE_ELENCO_FARMACIE));
 			InputStream input = new FileInputStream(fileElencoFarmacie);
 			in = new BufferedReader(new InputStreamReader(input, Charset.forName("ISO-8859-1")));
 			String line;
@@ -95,7 +79,7 @@ public class ImportaFarmacieDaFile {
 		BufferedReader in = null;
 		Map<String, InfoFarmacie> mapTurniFarmacie = new HashMap<String, InfoFarmacie>();
 		try {
-			File fileTurni = new File(String.format("%s/%s", sdCardPath, NOME_FILE_TURNI));
+			File fileTurni = new File(String.format("%s/%s", internalMemoryPath, NOME_FILE_TURNI));
 			String pathFile = fileTurni.getPath();
 			InputStream input = new FileInputStream(pathFile);
 			in = new BufferedReader(new InputStreamReader(input, Charset.forName("ISO-8859-1")));

@@ -11,10 +11,27 @@ import android.widget.Toast;
 
 public class AggiornamentoFileDaSdCard {
 	
+	protected static String sdCardPath = null;
+	
+	static {
+		String[] directories = GetRemovableDevice.getDirectories();
+		for (int i = 0; i < directories.length; i++) {
+//			System.out.println(String.format("directory %s -> %s", i, directories[i]));
+
+			sdCardPath = directories[i]; //Environment.getExternalStorageDirectory().getAbsolutePath();
+			File elencoFarmacie = new File(String.format("%s/%s", sdCardPath, ImportaFarmacieDaFile.NOME_FILE_ELENCO_FARMACIE));
+			File fileTurni = new File(String.format("%s/%s", sdCardPath, ImportaFarmacieDaFile.NOME_FILE_TURNI));
+//			System.out.println("elencoFarmacie: " + elencoFarmacie.getAbsolutePath());
+//			System.out.println("fileTurni: " + fileTurni.getAbsolutePath());
+			if (elencoFarmacie.exists() && fileTurni.exists())
+				break;
+		}
+	}	
+	
 	public static boolean copyFiles(Context context) {
 		boolean copyOk = false;
-		File turniSdCard = new File(String.format("%s/%s", ImportaFarmacieDaFile.sdCardPath, ImportaFarmacieDaFile.NOME_FILE_TURNI));
-		File elencoFarmacieSdCard = new File(String.format("%s/%s", ImportaFarmacieDaFile.sdCardPath, ImportaFarmacieDaFile.NOME_FILE_ELENCO_FARMACIE));
+		File turniSdCard = new File(String.format("%s/%s", sdCardPath, ImportaFarmacieDaFile.NOME_FILE_TURNI));
+		File elencoFarmacieSdCard = new File(String.format("%s/%s", sdCardPath, ImportaFarmacieDaFile.NOME_FILE_ELENCO_FARMACIE));
 		try {
 //			System.out.println("CHECK FILE -> " + (turniSdCard.exists() && elencoFarmacieSdCard.exists()));
 			if (turniSdCard.exists() && elencoFarmacieSdCard.exists()) {
@@ -32,7 +49,7 @@ public class AggiornamentoFileDaSdCard {
 		return copyOk;
 	}
 
-	public static void copyFile(File src, File dst) throws IOException {
+	private static void copyFile(File src, File dst) throws IOException {
 		FileInputStream fileInputStream = new FileInputStream(src);
 		FileChannel inChannel = fileInputStream.getChannel();
 		FileOutputStream fileOutputStream = new FileOutputStream(dst);
