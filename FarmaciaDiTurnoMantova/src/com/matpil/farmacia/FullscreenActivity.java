@@ -299,7 +299,7 @@ public class FullscreenActivity extends ActionBarActivity {
 						// COPIA FILE DA SD A MEMORIA INTERNA
 						copyFileFromSdCard();
 						// AGGIORNARE FILE DATI
-						caricamentoDati();
+						displayInfo();
 					}
 
 				}).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
