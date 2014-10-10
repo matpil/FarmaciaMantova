@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
@@ -22,9 +23,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
+import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,6 +43,7 @@ import com.matpil.farmacia.model.Intestazione;
 import com.matpil.farmacia.other.SystemUiHider;
 import com.matpil.farmacia.parser.AggiornamentoFileDaSdCard;
 import com.matpil.farmacia.service.BroadcastService;
+import com.matpil.farmacia.service.PopUpBroadcastService;
 import com.matpil.farmacia.util.DataLoader;
 import com.matpil.farmacia.util.TimeHelper;
 
@@ -73,6 +78,9 @@ public class FullscreenActivity extends ActionBarActivity {
 	private String endHour = null;
 
 	private Intent intent;
+	private Intent intentPopUp;
+	
+	private CountDownTimer mPopUpDismissTimer; // instance variable, put in your activity class
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +95,7 @@ public class FullscreenActivity extends ActionBarActivity {
 		otherConfig();
 
 		intent = new Intent(this, BroadcastService.class);
+		intentPopUp = new Intent(this, PopUpBroadcastService.class);
 
 	}// onCreate
 
@@ -99,28 +108,38 @@ public class FullscreenActivity extends ActionBarActivity {
 		Date toDisplay = loader.getDataCorrente();
 		if (toDisplay == null)
 			toDisplay = new Date();
-		dateText.setText(TimeHelper.retrieveDateFormatted("EEEE dd MMMM yyyy", toDisplay));
+		dateText.setText(TimeHelper.retrieveDateFormatted("EEEE dd MMMM yyyy",
+				toDisplay));
 		// imposto range orario
 		String periodText = getString(R.string.period);
 		TextView periodTV = (TextView) findViewById(R.id.period);
-		periodTV.setText(TimeHelper.retrieveRangeHour(periodText, startHour, endHour));
+		periodTV.setText(TimeHelper.retrieveRangeHour(periodText, startHour,
+				endHour));
 	}
 
 	private Date caricamentoDati() {
 		boolean caricamentoEffettuato = loader.caricaDati();
-		InfoFarmacie infoFarmacie = null;
 		Date currentDate = null;
 		if (!caricamentoEffettuato) {
 			createAlert("Errore durante il caricamento file dati");
 		} else {
-			infoFarmacie = loader.recuperaListaFarmaciePerGiorno(startHour);
-			List<Farmacia> listPharm = infoFarmacie.getListPharm();
-			currentDate = TimeHelper.retrieveDate(this.startHour);
-			this.startHour = infoFarmacie.getTimeUpdate();
-			this.endHour = loader.recuperaOrarioAperturaPerGiorno(TimeHelper.retrieveTomorrowRightDateFormatted("dd/MM/yyyy", this.startHour));
-			showList(listPharm);
+			currentDate = showData();
 		}
 		return currentDate == null ? new Date() : currentDate;
+	}
+
+	public Date showData() {
+		InfoFarmacie infoFarmacie;
+		Date currentDate;
+		infoFarmacie = loader.recuperaListaFarmaciePerGiorno(startHour);
+		List<Farmacia> listPharm = infoFarmacie.getListPharm();
+		currentDate = TimeHelper.retrieveDate(this.startHour);
+		this.startHour = infoFarmacie.getTimeUpdate();
+		this.endHour = loader.recuperaOrarioAperturaPerGiorno(TimeHelper
+				.retrieveTomorrowRightDateFormatted("dd/MM/yyyy",
+						this.startHour));
+		showList(listPharm);
+		return currentDate;
 	}
 
 	private void showList(List<Farmacia> listPharm) {
@@ -150,7 +169,8 @@ public class FullscreenActivity extends ActionBarActivity {
 		view.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
 				if (!actionBarShow) {
 					actionBar.show();
 					actionBarShow = true;
@@ -178,26 +198,96 @@ public class FullscreenActivity extends ActionBarActivity {
 	}
 
 	private void createAlert(String msg) {
-		new AlertDialog.Builder(this).setTitle(msg).setNeutralButton("CONTINUA", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// do nothing...
-			}
-		}).create().show();
+		new AlertDialog.Builder(this)
+				.setTitle(msg)
+				.setNeutralButton("CONTINUA",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								// do nothing...
+							}
+						}).create().show();
 	}
 
 	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			updateUI(intent);
+			if (intent.getAction().equals(BroadcastService.BROADCAST_ACTION)) {
+				updateUI();
+			}
+			if (intent.getAction().equals(PopUpBroadcastService.POPUP_BROADCAST_ACTION)) {
+				TableLayout tl = (TableLayout) findViewById(R.id.tableLayout);
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setImageDrawable((getResources().getDrawable(R.drawable.farmacie_di_turno_popup)));
+				loadPhoto(imageView, tl.getWidth(), tl.getHeight());
+
+			}
 		}
 	};
+
+	PopupWindow popupWindow =null;
+	
+	private void loadPhoto(ImageView imageView, int width, int height) {
+		
+		ImageView tempImageView = imageView;
+
+		//you can put logic for dismissing your popup window once the window has been initialized 
+		popupWindow = new PopupWindow(tempImageView, width, height); 
+		getPopUpDismissTimer(5000, 1000); //5000 ms is the time when you want to dismiss popup 			
+
+//		AlertDialog.Builder imageDialog = new AlertDialog.Builder(this);
+//		LayoutInflater inflater = (LayoutInflater) this
+//				.getSystemService(LAYOUT_INFLATER_SERVICE);
+//
+//		View layout = inflater.inflate(R.layout.custom_fullimage_dialog,
+//				(ViewGroup) findViewById(R.id.layout_root));
+//		ImageView image = (ImageView) layout.findViewById(R.id.fullimage);
+//		image.setImageDrawable(tempImageView.getDrawable());
+//		imageDialog.setView(layout);
+//		imageDialog.setPositiveButton("OK",
+//				new DialogInterface.OnClickListener() {
+//
+//					public void onClick(DialogInterface dialog, int which) {
+//						dialog.dismiss();
+//					}
+//
+//				});
+
+//		imageDialog.create();
+//		imageDialog.show();
+		popupWindow.setAnimationStyle(Animation.ZORDER_BOTTOM);
+		TableLayout tl = (TableLayout) findViewById(R.id.tableLayout);
+		popupWindow.showAtLocation(tl, 0, 0, 0);
+		mPopUpDismissTimer.start();
+	}
+	
+	private void getPopUpDismissTimer(long millisInFuture, long countDownInterval) { 
+		mPopUpDismissTimer = new CountDownTimer(millisInFuture, countDownInterval) {
+			@Override
+			public void onTick(long millisUntilFinished) {
+				// TODO Auto-generated method stub
+			}
+			
+			@Override
+			public void onFinish() {
+				popupWindow.dismiss();
+			}
+			
+		};
+	}
+	
+	
 
 	@Override
 	public void onResume() {
 		super.onResume();
 		startService(intent);
-		registerReceiver(broadcastReceiver, new IntentFilter(BroadcastService.BROADCAST_ACTION));
+		startService(intentPopUp);
+		registerReceiver(broadcastReceiver, new IntentFilter(
+				BroadcastService.BROADCAST_ACTION));
+		registerReceiver(broadcastReceiver, new IntentFilter(
+				PopUpBroadcastService.POPUP_BROADCAST_ACTION));
 	}
 
 	@Override
@@ -205,17 +295,21 @@ public class FullscreenActivity extends ActionBarActivity {
 		super.onPause();
 		unregisterReceiver(broadcastReceiver);
 		stopService(intent);
+		stopService(intentPopUp);
 	}
 
-	private void updateUI(Intent intent) {
+	public void updateUI() {
 		if (this.endHour != null) {
-			String dtFormat = TimeHelper.retrieveDateFormattedWithHourAndMin(endHour);
-			String dtCheck = TimeHelper.retrieveDateFormatted("dd/MM/yyyy HH:mm", new Date());
+			String dtFormat = TimeHelper
+					.retrieveDateFormattedWithHourAndMin(endHour);
+			String dtCheck = TimeHelper.retrieveDateFormatted(
+					"dd/MM/yyyy HH:mm", new Date());
 			System.out.println(String.format("%s - %s", dtFormat, dtCheck));
 			if (dtFormat.equals(dtCheck)) {
 				cleanData();
 				displayInfo();
-				Toast.makeText(this, "AGGIORNAMENTO COMPLETATO", Toast.LENGTH_LONG).show();
+				Toast.makeText(this, "AGGIORNAMENTO COMPLETATO",
+						Toast.LENGTH_LONG).show();
 				// lastUpdate = currentUpdate;
 			}
 		}
@@ -233,37 +327,40 @@ public class FullscreenActivity extends ActionBarActivity {
 
 		// Set up an instance of SystemUiHider to control the system UI for
 		// this activity.
-		mSystemUiHider = SystemUiHider.getInstance(this, tl, SystemUiHider.FLAG_FULLSCREEN);
+		mSystemUiHider = SystemUiHider.getInstance(this, tl,
+				SystemUiHider.FLAG_FULLSCREEN);
 		mSystemUiHider.setup();
-		mSystemUiHider.setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-			// Cached values.
+		mSystemUiHider
+				.setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
+					// Cached values.
 
-			int mShortAnimTime;
+					int mShortAnimTime;
 
-			@Override
-			@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-			public void onVisibilityChange(boolean visible) {
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-					// If the ViewPropertyAnimator API is available
-					// (Honeycomb MR2 and later), use it to animate the
-					// in-layout UI controls at the bottom of the
-					// screen.
+					@Override
+					@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+					public void onVisibilityChange(boolean visible) {
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+							// If the ViewPropertyAnimator API is available
+							// (Honeycomb MR2 and later), use it to animate the
+							// in-layout UI controls at the bottom of the
+							// screen.
 
-					if (mShortAnimTime == 0) {
-						mShortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+							if (mShortAnimTime == 0) {
+								mShortAnimTime = getResources().getInteger(
+										android.R.integer.config_shortAnimTime);
+							}
+						} else {
+							// If the ViewPropertyAnimator APIs aren't
+							// available, simply show or hide the in-layout UI
+							// controls.
+						}
+
+						if (visible && AUTO_HIDE) {
+							// Schedule a hide().
+							delayedHide(AUTO_HIDE_DELAY_MILLIS);
+						}
 					}
-				} else {
-					// If the ViewPropertyAnimator APIs aren't
-					// available, simply show or hide the in-layout UI
-					// controls.
-				}
-
-				if (visible && AUTO_HIDE) {
-					// Schedule a hide().
-					delayedHide(AUTO_HIDE_DELAY_MILLIS);
-				}
-			}
-		});
+				});
 	}
 
 	@Override
@@ -271,7 +368,8 @@ public class FullscreenActivity extends ActionBarActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		// System.out.println("CODICE RICEVUTO DA ACTIVITY -> " + code);
 		if (resultCode == Activity.RESULT_OK) {
-			Intestazione intestazione = (Intestazione) data.getSerializableExtra("newCode");
+			Intestazione intestazione = (Intestazione) data
+					.getSerializableExtra("newCode");
 			GestioneIntestazione.salvaIntestazione(intestazione, this);
 		}
 	}
@@ -283,6 +381,8 @@ public class FullscreenActivity extends ActionBarActivity {
 			return sottoMenu.createChangeTitleDialog();
 		case SottoMenu.CAMBIA_COSTO_CHIAMATA:
 			return sottoMenu.createChangeTitleDialog();
+		case SottoMenu.CAMBIA_NUMERO_GUARDIA_MEDICA:
+			return sottoMenu.cambiaNumeroGuardiaMedica();
 		case SottoMenu.ABOUT_DIALOG:
 			return sottoMenu.createAboutDialog();
 		case SottoMenu.AGGIORNA_TURNI:
@@ -292,7 +392,8 @@ public class FullscreenActivity extends ActionBarActivity {
 	}
 
 	private Dialog updateDataDialog() {
-		return new AlertDialog.Builder(this).setTitle("AGGIORNARE GLI ARCHIVI DI FARMACIE E TURNI?")
+		return new AlertDialog.Builder(this)
+				.setTitle("AGGIORNARE GLI ARCHIVI DI FARMACIE E TURNI?")
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -302,13 +403,16 @@ public class FullscreenActivity extends ActionBarActivity {
 						displayInfo();
 					}
 
-				}).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-					}
-				}).create();
+				})
+				.setNegativeButton("CANCEL",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+							}
+						}).create();
 	}
-	
+
 	private void copyFileFromSdCard() {
 		boolean copied = AggiornamentoFileDaSdCard.copyFiles(this);
 		if (copied)
@@ -332,6 +436,9 @@ public class FullscreenActivity extends ActionBarActivity {
 		case R.id.menu_mod_costo_chiamata:
 			showDialog(SottoMenu.CAMBIA_COSTO_CHIAMATA);
 			return true;
+		case R.id.menu_mod_numero_guardia_medica:
+			showDialog(SottoMenu.CAMBIA_NUMERO_GUARDIA_MEDICA);
+			return true;
 		case R.id.menu_about:
 			showDialog(SottoMenu.ABOUT_DIALOG);
 			return true;
@@ -354,9 +461,11 @@ public class FullscreenActivity extends ActionBarActivity {
 
 	public void setKeepScreenOn(Activity activity, boolean keepScreenOn) {
 		if (keepScreenOn) {
-			activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			activity.getWindow().addFlags(
+					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		} else {
-			activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			activity.getWindow().clearFlags(
+					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		}
 	}
 
@@ -369,23 +478,6 @@ public class FullscreenActivity extends ActionBarActivity {
 		mHideHandler.postDelayed(mHideRunnable, delayMillis);
 	}
 
-	// /**
-	// * Touch listener to use for in-layout UI controls to delay hiding the
-	// * system UI. This is to prevent the jarring behavior of controls going
-	// away
-	// * while interacting with activity UI.
-	// */
-	// View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener()
-	// {
-	// @Override
-	// public boolean onTouch(View view, MotionEvent motionEvent) {
-	// if (AUTO_HIDE) {
-	// delayedHide(AUTO_HIDE_DELAY_MILLIS);
-	// }
-	// return false;
-	// }
-	// };
-
 	Handler mHideHandler = new Handler();
 	Runnable mHideRunnable = new Runnable() {
 		@Override
@@ -393,5 +485,9 @@ public class FullscreenActivity extends ActionBarActivity {
 			mSystemUiHider.hide();
 		}
 	};
+
+	public DataLoader getLoader() {
+		return loader;
+	}
 
 }

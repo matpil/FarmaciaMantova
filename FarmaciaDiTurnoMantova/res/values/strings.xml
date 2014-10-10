@@ -9,6 +9,7 @@
     <string name="impostazioni">Impostazioni</string>
     <string name="period">DALLE ORE start ALLE end DEL GIORNO SUCCESSIVO</string>
     <string name="modificaCostoChiamateUrgenti">Imposta costo chiamata Urgenza</string>
+    <string name="modificaNumeroGuardiaMedica">Imposta numero guardia medica</string>
     <string name="modificaIntestazioneFarmacia">Modifica intestazione Farmacia</string>
     <string name="importaNuovoFileTurni">Aggiorna archivio dati</string>
     <string name="title_activity_impostazioni">Impostazioni</string>

@@ -12,6 +12,10 @@
 	    android:id="@+id/menu_mod_costo_chiamata" 
 	    android:title="@string/modificaCostoChiamateUrgenti"
 		android:icon="@android:drawable/ic_menu_edit"/>
+	<item 
+	    android:id="@+id/menu_mod_numero_guardia_medica" 
+	    android:title="@string/modificaNumeroGuardiaMedica"
+		android:icon="@android:drawable/ic_menu_edit"/>
 	<item
 	    android:autoLink="all" 
 	    android:id="@+id/menu_about" 

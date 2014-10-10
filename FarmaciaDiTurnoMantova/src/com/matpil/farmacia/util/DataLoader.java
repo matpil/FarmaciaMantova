@@ -23,9 +23,13 @@ public class DataLoader {
 	}
 
 	public boolean caricaDati() {
-		boolean caricamentoOk = false;
 		if (this.farmacie != null && this.turni != null)
-			return true;
+			return true;		
+		return ricaricaDati();
+	}
+	
+	public boolean ricaricaDati() {
+		boolean caricamentoOk = false;
 		try {
 			this.farmacie = ImportaFarmacieDaFile.readPharmFile(this.context);
 			this.turni = ImportaFarmacieDaFile.readTurniFile(this.context, this.farmacie);

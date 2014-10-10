@@ -20,8 +20,8 @@
         android:gravity="right"
         android:text="@string/genericString"
         android:textColor="#000000"
-        android:textSize="16sp" />
-    
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/nomeTv"
@@ -29,12 +29,11 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/localitaTv"
         android:layout_below="@+id/localitaTv"
-        
         android:gravity="left"
         android:text="@string/genericString"
         android:textColor="#000000"
-        android:textSize="16sp" />    
-    
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/addressTv"
@@ -42,11 +41,11 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/nomeTv"
         android:layout_below="@+id/nomeTv"
-        
         android:gravity="right"
         android:text="@string/genericString"
         android:textColor="#000000"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:textStyle="bold" />
     
     <TextView
         android:id="@+id/TelTv"
@@ -54,10 +53,11 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/addressTv"
         android:layout_below="@+id/addressTv"
-        
         android:text="@string/genericString"
         android:textColor="#000000"
-        android:textSize="16sp" />    
+        android:textSize="16sp"
+        android:textStyle="bold" />
+    
 <!-- -->
 
     <TextView
@@ -66,9 +66,8 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/TelTv"
         android:layout_below="@+id/TelTv"
-        
         android:textColor="#ff0000"
-        android:textSize="16sp" />
-
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
 </RelativeLayout>

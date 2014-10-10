@@ -38,6 +38,7 @@
         <activity android:name="ar.com.daidalos.afiledialog.FileChooserActivity" />
 
         <service android:name="com.matpil.farmacia.service.BroadcastService" />
+        <service android:name="com.matpil.farmacia.service.PopUpBroadcastService" />
     </application>
 
 </manifest>

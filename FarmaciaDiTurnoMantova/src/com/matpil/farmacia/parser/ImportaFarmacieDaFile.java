@@ -14,15 +14,18 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.matpil.farmacia.model.Farmacia;
 import com.matpil.farmacia.model.InfoFarmacie;
 
 public class ImportaFarmacieDaFile {
 
+	protected static String internalMemoryPath = null;
+	public final static String GUARDIA_MEDICA = "guardiaMedica";
+	public final static String NUMERO_GUARDIA_MEDICA = "numeroGuardiaMedica";
 	protected final static String NOME_FILE_TURNI = "TurniFarmacieMantova.csv";
 	protected final static String NOME_FILE_ELENCO_FARMACIE = "ElencoFarmacieMantova.csv";	
-	protected static String internalMemoryPath = null;
 
 	public static Map<String, Farmacia> readPharmFile(Context context) throws IOException {
 		checkDir(context);
@@ -121,7 +124,7 @@ public class ImportaFarmacieDaFile {
 					farmList.add(addPharm(pharmMap, farm6, note6));
 					farmList.add(addPharm(pharmMap, farm7, note7));
 					farmList.add(addPharm(pharmMap, farm8, note8));
-					farmList.add(specialFarm());
+					farmList.add(specialFarm(context));
 					farmList.add(addPharm(pharmMap, farm9, note9));
 					farmList.add(addPharm(pharmMap, farm10, note10));
 					farmList.add(addPharm(pharmMap, farm11, note11));
@@ -155,13 +158,19 @@ public class ImportaFarmacieDaFile {
 		return toAdd;
 	}
 
-	private static Farmacia specialFarm() {
+	private static Farmacia specialFarm(Context context) {
 		Farmacia farmacia = new Farmacia();
-		farmacia.setLocalità("INFO FARMACIE DI");
-		farmacia.setNome("TURNO N. VERDE");
-		farmacia.setIndirizzo("800228521");
-		farmacia.setTelefono("");
+		farmacia.setLocalità("INFO FARMACIE DI TURNO");
+		farmacia.setNome("800228521");
+		farmacia.setIndirizzo("GUARDIA MEDICA");		
+		farmacia.setTelefono(retrieveNumeroGuardiMedica(context));
 		return farmacia;
+	}
+
+	private static String retrieveNumeroGuardiMedica(Context context) {
+		SharedPreferences prefs = context.getSharedPreferences(GUARDIA_MEDICA, Context.MODE_PRIVATE);
+		String numeroGuardiaMedica = prefs.getString(NUMERO_GUARDIA_MEDICA, "");
+		return numeroGuardiaMedica;
 	}
 
 	private static String checkToken(StringTokenizer st) {
