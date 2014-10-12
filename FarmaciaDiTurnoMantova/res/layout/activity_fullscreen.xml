@@ -63,7 +63,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:gravity="center"
-                    android:text="tel. 0378-98127"
+                    android:text="tel. 0376-98127"
                     android:textColor="#ffffff"
                     android:textSize="15sp"
                     android:textStyle="italic" />

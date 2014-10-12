@@ -41,6 +41,7 @@ import com.matpil.farmacia.model.Farmacia;
 import com.matpil.farmacia.model.InfoFarmacie;
 import com.matpil.farmacia.model.Intestazione;
 import com.matpil.farmacia.other.SystemUiHider;
+import com.matpil.farmacia.parser.AggiornamentoFileDaRemoto;
 import com.matpil.farmacia.parser.AggiornamentoFileDaSdCard;
 import com.matpil.farmacia.service.BroadcastService;
 import com.matpil.farmacia.service.PopUpBroadcastService;
@@ -159,6 +160,7 @@ public class FullscreenActivity extends ActionBarActivity {
 		// Recupero dati salvati in SharedPreferences
 		sottoMenu.checkDefaultCallValue();
 		sottoMenu.updatePreferencesData();
+		GestioneIntestazione.caricaIntestazione(this);
 	}
 
 	private void manageActionBar() {
@@ -236,26 +238,6 @@ public class FullscreenActivity extends ActionBarActivity {
 		popupWindow = new PopupWindow(tempImageView, width, height); 
 		getPopUpDismissTimer(5000, 1000); //5000 ms is the time when you want to dismiss popup 			
 
-//		AlertDialog.Builder imageDialog = new AlertDialog.Builder(this);
-//		LayoutInflater inflater = (LayoutInflater) this
-//				.getSystemService(LAYOUT_INFLATER_SERVICE);
-//
-//		View layout = inflater.inflate(R.layout.custom_fullimage_dialog,
-//				(ViewGroup) findViewById(R.id.layout_root));
-//		ImageView image = (ImageView) layout.findViewById(R.id.fullimage);
-//		image.setImageDrawable(tempImageView.getDrawable());
-//		imageDialog.setView(layout);
-//		imageDialog.setPositiveButton("OK",
-//				new DialogInterface.OnClickListener() {
-//
-//					public void onClick(DialogInterface dialog, int which) {
-//						dialog.dismiss();
-//					}
-//
-//				});
-
-//		imageDialog.create();
-//		imageDialog.show();
 		popupWindow.setAnimationStyle(Animation.ZORDER_BOTTOM);
 		TableLayout tl = (TableLayout) findViewById(R.id.tableLayout);
 		popupWindow.showAtLocation(tl, 0, 0, 0);
@@ -266,7 +248,6 @@ public class FullscreenActivity extends ActionBarActivity {
 		mPopUpDismissTimer = new CountDownTimer(millisInFuture, countDownInterval) {
 			@Override
 			public void onTick(long millisUntilFinished) {
-				// TODO Auto-generated method stub
 			}
 			
 			@Override
@@ -397,12 +378,15 @@ public class FullscreenActivity extends ActionBarActivity {
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
+						boolean copyFileFromRemote = copyFileFromRemote();
 						// COPIA FILE DA SD A MEMORIA INTERNA
-						copyFileFromSdCard();
+						if (!copyFileFromRemote){
+							System.out.println("Aggiornamento da remto fallito, provo da scheda Sd");
+							copyFileFromSdCard();
+						}
 						// AGGIORNARE FILE DATI
 						displayInfo();
 					}
-
 				})
 				.setNegativeButton("CANCEL",
 						new DialogInterface.OnClickListener() {
@@ -419,6 +403,16 @@ public class FullscreenActivity extends ActionBarActivity {
 			createAlert("AGGIORNAMENTO AVVENUTO CON SUCCESSO");
 		else
 			createAlert("ERRORE DURANTE L'AGGIORNAMENTO DEI DATI");
+	}
+	
+	private boolean copyFileFromRemote() {
+		boolean copied = AggiornamentoFileDaRemoto.downloadAndCopyFiles(this);
+		if (copied)
+			createAlert("AGGIORNAMENTO AVVENUTO CON SUCCESSO");
+		else
+			createAlert("ERRORE DURANTE L'AGGIORNAMENTO DEI DATI");
+		
+		return copied;
 	}
 
 	public boolean onCreateOptionsMenu(Menu menu) {

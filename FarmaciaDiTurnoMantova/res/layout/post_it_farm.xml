@@ -67,7 +67,7 @@
         android:layout_alignLeft="@+id/TelTv"
         android:layout_below="@+id/TelTv"
         android:textColor="#ff0000"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textSize="15sp"
+        android:textStyle="normal" />
 
 </RelativeLayout>

@@ -49,7 +49,7 @@ public class AggiornamentoFileDaSdCard {
 		return copyOk;
 	}
 
-	private static void copyFile(File src, File dst) throws IOException {
+	protected static void copyFile(File src, File dst) throws IOException {
 		FileInputStream fileInputStream = new FileInputStream(src);
 		FileChannel inChannel = fileInputStream.getChannel();
 		FileOutputStream fileOutputStream = new FileOutputStream(dst);

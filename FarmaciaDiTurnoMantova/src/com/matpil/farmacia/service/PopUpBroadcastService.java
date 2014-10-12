@@ -29,7 +29,7 @@ public class PopUpBroadcastService  extends Service {
     private Runnable sendUpdatesToUI = new Runnable() {
     	public void run() {
     		DisplayLoggingInfo();    		
-    	    handler.postDelayed(this, 60000); // 60 seconds
+    	    handler.postDelayed(this, 25000); // 25 seconds
     	}
     };    
     

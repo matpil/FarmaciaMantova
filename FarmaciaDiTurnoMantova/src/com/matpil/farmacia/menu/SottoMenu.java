@@ -44,8 +44,15 @@ public class SottoMenu {
 	}
 
 	public Dialog createAboutDialog() {
-		String message = "Skype: <a> matpil</a><br>" + "Twitter: <a href='https://twitter.com/matpil81'>@matpil81</a><br>"
-				+ "Email : <a href='mailto://matpil@gmail.com'>matpil@gmail.com</a>";
+		StringBuilder sb = new StringBuilder();
+		sb.append("Matteo Pileggi<br>");
+		sb.append("Skype: <a> matpil</a><br>");
+		sb.append("Email : <a href='mailto://matpil@gmail.com'>matpil@gmail.com</a><br><br>");
+		sb.append("Marco Pistoni <br>");
+		sb.append("Skype: <a> pistoni.marco</a><br>");
+		sb.append("Email : <a href='mailto://marco.pistoni@tin.it'>marco.pistoni@tin.it</a><br>");
+		sb.append("Telefono: <a> 0376-98127</a>");
+		String message = sb.toString();
 		return new AlertDialog.Builder(this.act).setTitle("CONTATTI").setMessage(Html.fromHtml(message)).create();
 	}
 
