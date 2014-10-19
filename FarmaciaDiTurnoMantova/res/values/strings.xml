@@ -4,6 +4,7 @@
     <string name="app_name">Farmacia di turno Mantova</string>
     <string name="about">Contatti</string>
     <string name="genericString">" ---- "</string>
+    <string name="postItSalva">" SALVA "</string>
     <string name="chiamateUrgenti">"PER LA DISPENSAZIONE DI MEDICINALI DURANTE LE ORE NOTTURNE A BATTENTI CHIUSI SONO DOVUTI EURO"</string>
     <string name="chiamateUrgentiCostoDefault">3,87</string>
     <string name="impostazioni">Impostazioni</string>
@@ -12,6 +13,8 @@
     <string name="modificaNumeroGuardiaMedica">Imposta numero guardia medica</string>
     <string name="modificaIntestazioneFarmacia">Modifica intestazione Farmacia</string>
     <string name="importaNuovoFileTurni">Aggiorna archivio dati</string>
+    <string name="gestione_popup">Abilita/Disabilita popup</string>
+    <string name="modificaPostIt">Modifica numeri utili</string>
     <string name="title_activity_impostazioni">Impostazioni</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>

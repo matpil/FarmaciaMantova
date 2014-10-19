@@ -8,14 +8,21 @@
 	    android:id="@+id/menu_cambia_file_turni" 
 	    android:title="@string/importaNuovoFileTurni"
 		android:icon="@android:drawable/ic_menu_edit"/>
+<!-- 	
+	<item 
+	    android:id="@+id/menu_gestione_popup" 
+	    android:title="@string/gestione_popup"
+		android:icon="@android:drawable/ic_menu_edit"/>
+-->
+	<item 
+	    android:id="@+id/menu_mod_numeri_utili" 
+	    android:title="@string/modificaPostIt"
+		android:icon="@android:drawable/ic_menu_edit"/>
 	<item 
 	    android:id="@+id/menu_mod_costo_chiamata" 
 	    android:title="@string/modificaCostoChiamateUrgenti"
 		android:icon="@android:drawable/ic_menu_edit"/>
-	<item 
-	    android:id="@+id/menu_mod_numero_guardia_medica" 
-	    android:title="@string/modificaNumeroGuardiaMedica"
-		android:icon="@android:drawable/ic_menu_edit"/>
+
 	<item
 	    android:autoLink="all" 
 	    android:id="@+id/menu_about" 

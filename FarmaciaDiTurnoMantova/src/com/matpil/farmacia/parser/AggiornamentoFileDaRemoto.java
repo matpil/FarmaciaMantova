@@ -32,7 +32,8 @@ public class AggiornamentoFileDaRemoto {
 		return true;
 	}
 
-	private static void downloadAndStore(Context context, URL url, String path) throws Exception {
+	private static void downloadAndStore(Context context, URL url, String path)
+			throws Exception {
 
 		try {
 			InputStream input = null;
@@ -49,10 +50,11 @@ public class AggiornamentoFileDaRemoto {
 			// expect HTTP 200 OK, so we don't mistakenly save error report
 			// instead of the file
 			if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				System.out.println("Server returned HTTP "
-						+ connection.getResponseCode() + " "
-						+ connection.getResponseMessage());
-				throw new IOException();
+				String msg = String.format("Server returned HTTP %s %s",
+						connection.getResponseCode(),
+						connection.getResponseMessage());
+				System.out.println(msg);
+				throw new IOException(msg);
 			}
 
 			// this will be useful to display download percentage
@@ -74,17 +76,17 @@ public class AggiornamentoFileDaRemoto {
 			output = new FileOutputStream(downloaded);
 
 			byte data[] = new byte[4096];
-//			long total = 0;
+			// long total = 0;
 			int count;
 			while ((count = input.read(data)) != -1) {
 				output.write(data, 0, count);
 			}
 			output.flush();
 			output.close();
-			
+
 			File toImport = new File(String.format("%s/%s",
 					ImportaFarmacieDaFile.internalMemoryPath, path));
-			System.out.println("toImport -> " + toImport.getAbsolutePath());
+			// System.out.println("toImport -> " + toImport.getAbsolutePath());
 			AggiornamentoFileDaSdCard.copyFile(downloaded, toImport);
 			downloaded.delete();
 

@@ -16,18 +16,20 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.support.v4.view.ViewPager.LayoutParams;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -219,10 +221,9 @@ public class FullscreenActivity extends ActionBarActivity {
 				updateUI();
 			}
 			if (intent.getAction().equals(PopUpBroadcastService.POPUP_BROADCAST_ACTION)) {
-				TableLayout tl = (TableLayout) findViewById(R.id.tableLayout);
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setImageDrawable((getResources().getDrawable(R.drawable.farmacie_di_turno_popup)));
-				loadPhoto(imageView, tl.getWidth(), tl.getHeight());
+//				ImageView imageView = new ImageView(getApplicationContext());
+//				imageView.setImageDrawable((getResources().getDrawable(R.drawable.farmacie_di_turno_popup)));
+				loadPhoto();
 
 			}
 		}
@@ -230,18 +231,17 @@ public class FullscreenActivity extends ActionBarActivity {
 
 	PopupWindow popupWindow =null;
 	
-	private void loadPhoto(ImageView imageView, int width, int height) {
+	private void loadPhoto() {
+		getPopUpDismissTimer(3000, 1000); //3000 ms is the time when you want to dismiss popup
+	
+		LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		View layoutt = inflater.inflate(R.layout.custom_fullimage_dialog,(ViewGroup) findViewById(R.id.fullimage));
+		popupWindow = new PopupWindow(layoutt, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, true);
 		
-		ImageView tempImageView = imageView;
-
-		//you can put logic for dismissing your popup window once the window has been initialized 
-		popupWindow = new PopupWindow(tempImageView, width, height); 
-		getPopUpDismissTimer(5000, 1000); //5000 ms is the time when you want to dismiss popup 			
-
-		popupWindow.setAnimationStyle(Animation.ZORDER_BOTTOM);
-		TableLayout tl = (TableLayout) findViewById(R.id.tableLayout);
-		popupWindow.showAtLocation(tl, 0, 0, 0);
+		popupWindow.showAtLocation(layoutt, Gravity.NO_GRAVITY, LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT);
+		
 		mPopUpDismissTimer.start();
+		
 	}
 	
 	private void getPopUpDismissTimer(long millisInFuture, long countDownInterval) { 
@@ -362,16 +362,18 @@ public class FullscreenActivity extends ActionBarActivity {
 			return sottoMenu.createChangeTitleDialog();
 		case SottoMenu.CAMBIA_COSTO_CHIAMATA:
 			return sottoMenu.createChangeTitleDialog();
-		case SottoMenu.CAMBIA_NUMERO_GUARDIA_MEDICA:
-			return sottoMenu.cambiaNumeroGuardiaMedica();
+		case SottoMenu.MODIFICA_NUMERI_UTILI:
+			return sottoMenu.modificaNumeriUtili();
 		case SottoMenu.ABOUT_DIALOG:
 			return sottoMenu.createAboutDialog();
 		case SottoMenu.AGGIORNA_TURNI:
 			return updateDataDialog();
+		case SottoMenu.GESTIONE_POPUP:
+			return sottoMenu.gestionePopup();
 		}
 		return null;
 	}
-
+	
 	private Dialog updateDataDialog() {
 		return new AlertDialog.Builder(this)
 				.setTitle("AGGIORNARE GLI ARCHIVI DI FARMACIE E TURNI?")
@@ -381,7 +383,7 @@ public class FullscreenActivity extends ActionBarActivity {
 						boolean copyFileFromRemote = copyFileFromRemote();
 						// COPIA FILE DA SD A MEMORIA INTERNA
 						if (!copyFileFromRemote){
-							System.out.println("Aggiornamento da remto fallito, provo da scheda Sd");
+							System.out.println("Aggiornamento remoto fallito, provo da scheda Sd");
 							copyFileFromSdCard();
 						}
 						// AGGIORNARE FILE DATI
@@ -430,8 +432,8 @@ public class FullscreenActivity extends ActionBarActivity {
 		case R.id.menu_mod_costo_chiamata:
 			showDialog(SottoMenu.CAMBIA_COSTO_CHIAMATA);
 			return true;
-		case R.id.menu_mod_numero_guardia_medica:
-			showDialog(SottoMenu.CAMBIA_NUMERO_GUARDIA_MEDICA);
+		case R.id.menu_mod_numeri_utili:
+			showDialog(SottoMenu.MODIFICA_NUMERI_UTILI);
 			return true;
 		case R.id.menu_about:
 			showDialog(SottoMenu.ABOUT_DIALOG);
@@ -439,6 +441,9 @@ public class FullscreenActivity extends ActionBarActivity {
 		case R.id.menu_cambia_file_turni:
 			showDialog(SottoMenu.AGGIORNA_TURNI);
 			return true;
+//		case R.id.menu_gestione_popup:
+//			showDialog(SottoMenu.GESTIONE_POPUP);
+//			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}

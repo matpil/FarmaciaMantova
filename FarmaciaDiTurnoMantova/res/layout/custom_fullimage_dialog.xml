@@ -1,19 +1,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/layout_root" 
+    android:id="@+id/fullimage"
     android:orientation="horizontal"
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent"
-    android:padding="1dp">
-    <ImageView 
-        android:id="@+id/fullimage" 
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
-    </ImageView>
-
-    <TextView 
-        android:id="@+id/custom_fullimage_placename"
-        android:layout_width="wrap_content" 
-        android:layout_height="fill_parent"
-        android:textColor="#FFF">
-    </TextView>
-</LinearLayout>
+    android:padding="1dp" 
+    android:background="@drawable/farmacie_di_turno_popup"
+    />
