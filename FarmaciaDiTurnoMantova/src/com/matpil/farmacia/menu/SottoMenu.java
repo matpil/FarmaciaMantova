@@ -1,7 +1,6 @@
 package com.matpil.farmacia.menu;
 
 import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,8 +10,12 @@ import android.text.Html;
 import android.text.InputType;
 import android.text.method.DigitsKeyListener;
 import android.view.View;
+import android.view.ViewParent;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.matpil.farmacia.FullscreenActivity;
 import com.matpil.farmacia.R;
@@ -90,27 +93,79 @@ public class SottoMenu {
 		numeroGuardiMedicaText.setInputType(InputType.TYPE_CLASS_PHONE);
 		numeroGuardiMedicaText.setKeyListener(DigitsKeyListener.getInstance(
 				false, true));
-		 Dialog dialog = new Dialog(this.act);
-		 dialog.setContentView(R.layout.post_it_numeri_utili);
-		 dialog.setTitle("Modificatore campi per numeri utili");
-		 
-//		Dialog d = new AlertDialog.Builder(this.act)
-//				.setTitle("Inserire numero della guardia medica")
-//				.setView(R.layout.post_it_numeri_utili)
-//				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//					@Override
-//					public void onClick(DialogInterface dialog, int which) {
-//						saveAndReloadData(numeroGuardiMedicaText);
-//					}
-//				})
-//				.setNegativeButton("CANCEL",
-//						new DialogInterface.OnClickListener() {
-//							@Override
-//							public void onClick(DialogInterface dialog,
-//									int which) {
-//							}
-//						}).create();
-//		d.setContentView(R.layout.post_it_numeri_utili);
+
+		// AlertDialog.Builder builder = new AlertDialog.Builder(this.act);
+		//
+		// // builder.setTitle("Inserire numero della guardia medica");
+		// builder.setView(this.act.findViewById(R.layout.post_it_numeri_utili));
+		// builder.setPositiveButton("SALVA", new
+		// DialogInterface.OnClickListener() {
+		//
+		// @Override
+		// public void onClick(DialogInterface dialog, int which) {
+		// Toast.makeText(act, "SALVATO", Toast.LENGTH_LONG).show();
+		//
+		// }
+		// });
+		// builder.setNegativeButton("ANNULLA", new
+		// DialogInterface.OnClickListener() {
+		//
+		// @Override
+		// public void onClick(DialogInterface dialog, int which) {
+		// Toast.makeText(act, "ANNULLATO", Toast.LENGTH_LONG).show();
+		//
+		// }
+		// });
+		//
+		// builder.show();
+
+		final Dialog dialog = new Dialog(this.act);
+		dialog.setContentView(R.layout.post_it_numeri_utili);
+		dialog.setTitle("Modificatore campi per numeri utili");
+		final SharedPreferences prefs = this.act.getSharedPreferences(ImportaFarmacieDaFile.POST_IT_SPECIAL, Context.MODE_PRIVATE);
+		String row1 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_1, "INFO FARMACIE DI TURNO");
+		String row2 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_2, "800 22 85 21");
+		String row3 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_3, "");
+		String row4 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_4, "");
+		String row5 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_5, "");
+		((EditText)dialog.findViewById(R.id.text1)).setText(row1);
+		((EditText)dialog.findViewById(R.id.text2)).setText(row2);
+		((EditText)dialog.findViewById(R.id.text3)).setText(row3);
+		((EditText)dialog.findViewById(R.id.text4)).setText(row4);
+		((EditText)dialog.findViewById(R.id.text5)).setText(row5);
+		Button share = (Button) dialog.findViewById(R.id.dialogButtonOK);
+		share.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				Toast.makeText(act, "SALVATO", Toast.LENGTH_LONG).show();
+				SharedPreferences.Editor editor = prefs.edit();
+				
+				RelativeLayout rLayout = (RelativeLayout) v.getParent();
+				
+				String row1 = ((EditText)rLayout.findViewById(R.id.text1)).getText().toString();
+				if (row1!=null)
+					editor.putString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_1, row1);
+				String row2 = ((EditText)rLayout.findViewById(R.id.text2)).getText().toString();
+				if (row2!=null)
+					editor.putString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_2, row2);
+				String row3 = ((EditText)rLayout.findViewById(R.id.text3)).getText().toString();
+				if (row3!=null)
+					editor.putString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_3, row3);
+				String row4 = ((EditText)rLayout.findViewById(R.id.text4)).getText().toString();
+				if (row4!=null)
+					editor.putString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_4, row4);
+				String row5 = ((EditText)rLayout.findViewById(R.id.text5)).getText().toString();
+				if (row5!=null)
+					editor.putString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_5, row5);
+				
+				editor.commit();
+				act.getLoader().ricaricaDati();
+				act.showData();
+				dialog.dismiss();
+			}
+		});
+
 		return dialog;
 	}
 
@@ -146,23 +201,6 @@ public class SottoMenu {
 								// do nothing...
 							}
 						}).create();
-	}
-
-	protected void saveAndReloadData(View view) {
-		SharedPreferences prefs = this.act.getSharedPreferences(
-				ImportaFarmacieDaFile.GUARDIA_MEDICA, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = prefs.edit();
-		// Modifichiamo il valore con quello inserito nell'EditText
-		EditText outputView = (EditText) view;
-		CharSequence textData = outputView.getText();
-		if (textData != null) {
-			// Lo salviamo nelle Preferences
-			editor.putString(ImportaFarmacieDaFile.NUMERO_GUARDIA_MEDICA,
-					textData.toString());
-			editor.commit();
-		}
-		this.act.getLoader().ricaricaDati();
-		this.act.showData();
 	}
 
 	protected void onPrepareDialog(int id, Dialog dialog) {

@@ -15,15 +15,21 @@ import java.util.StringTokenizer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.widget.EditText;
 
+import com.matpil.farmacia.R;
 import com.matpil.farmacia.model.Farmacia;
 import com.matpil.farmacia.model.InfoFarmacie;
 
 public class ImportaFarmacieDaFile {
 
 	protected static String internalMemoryPath = null;
-	public final static String GUARDIA_MEDICA = "guardiaMedica";
-	public final static String NUMERO_GUARDIA_MEDICA = "numeroGuardiaMedica";
+	public final static String POST_IT_SPECIAL = "guardiaMedica";
+	public final static String POST_IT_SPECIAL_ROW_1 = "row1";
+	public final static String POST_IT_SPECIAL_ROW_2 = "row2";
+	public final static String POST_IT_SPECIAL_ROW_3 = "row3";
+	public final static String POST_IT_SPECIAL_ROW_4 = "row4";
+	public final static String POST_IT_SPECIAL_ROW_5 = "row5";
 	protected final static String NOME_FILE_TURNI = "TurniFarmacieMantova.csv";
 	protected final static String NOME_FILE_ELENCO_FARMACIE = "ElencoFarmacieMantova.csv";	
 
@@ -160,18 +166,20 @@ public class ImportaFarmacieDaFile {
 
 	private static Farmacia specialFarm(Context context) {
 		Farmacia farmacia = new Farmacia();
-		farmacia.setLocalità("INFO FARMACIE DI TURNO");
-		farmacia.setNome("800228521");
-		farmacia.setIndirizzo("GUARDIA MEDICA");		
-		farmacia.setTelefono(retrieveNumeroGuardiMedica(context));
+		final SharedPreferences prefs = context.getSharedPreferences(ImportaFarmacieDaFile.POST_IT_SPECIAL, Context.MODE_PRIVATE);
+		String row1 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_1, "INFO FARMACIE DI TURNO");
+		String row2 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_2, "800 22 85 21");
+		String row3 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_3, "");
+		String row4 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_4, "");
+		String row5 = prefs.getString(ImportaFarmacieDaFile.POST_IT_SPECIAL_ROW_5, "");				
+		farmacia.setLocalità(row1);
+		farmacia.setNome(row2);
+		farmacia.setIndirizzo(row3);		
+		farmacia.setTelefono(row4);
+		farmacia.setNote(row5);
 		return farmacia;
 	}
 
-	private static String retrieveNumeroGuardiMedica(Context context) {
-		SharedPreferences prefs = context.getSharedPreferences(GUARDIA_MEDICA, Context.MODE_PRIVATE);
-		String numeroGuardiaMedica = prefs.getString(NUMERO_GUARDIA_MEDICA, "");
-		return numeroGuardiaMedica;
-	}
 
 	private static String checkToken(StringTokenizer st) {
 		if (st.hasMoreTokens()) {

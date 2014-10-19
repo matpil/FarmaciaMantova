@@ -383,7 +383,6 @@ public class FullscreenActivity extends ActionBarActivity {
 						boolean copyFileFromRemote = copyFileFromRemote();
 						// COPIA FILE DA SD A MEMORIA INTERNA
 						if (!copyFileFromRemote){
-							System.out.println("Aggiornamento remoto fallito, provo da scheda Sd");
 							copyFileFromSdCard();
 						}
 						// AGGIORNARE FILE DATI
@@ -402,17 +401,17 @@ public class FullscreenActivity extends ActionBarActivity {
 	private void copyFileFromSdCard() {
 		boolean copied = AggiornamentoFileDaSdCard.copyFiles(this);
 		if (copied)
-			createAlert("AGGIORNAMENTO AVVENUTO CON SUCCESSO");
+			createAlert("AGGIORNAMENTO VIA MEMORIA SD AVVENUTO CON SUCCESSO");
 		else
-			createAlert("ERRORE DURANTE L'AGGIORNAMENTO DEI DATI");
+			createAlert("ERRORE DURANTE L'AGGIORNAMENTO VIA MEMORIA SD DEI DATI");
 	}
 	
 	private boolean copyFileFromRemote() {
 		boolean copied = AggiornamentoFileDaRemoto.downloadAndCopyFiles(this);
 		if (copied)
-			createAlert("AGGIORNAMENTO AVVENUTO CON SUCCESSO");
+			createAlert("AGGIORNAMENTO VIA WEB AVVENUTO CON SUCCESSO");
 		else
-			createAlert("ERRORE DURANTE L'AGGIORNAMENTO DEI DATI");
+			createAlert("ERRORE DURANTE L'AGGIORNAMENTO VIA WEB DEI DATI, PROVO VIA MEMORIA SD");
 		
 		return copied;
 	}
