@@ -1,10 +1,7 @@
 package com.matpil.farmacia;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -25,7 +22,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager.LayoutParams;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -114,13 +110,9 @@ public class FullscreenActivity extends ActionBarActivity {
 		
 		intentAlarm = new Intent(this, AlarmReceiver.class);
 		
-//		Date nextFriday = TimeHelper.calculateNextFriday();
-		Calendar nextFriday = Calendar.getInstance();
-		nextFriday.set(Calendar.MINUTE, 35);
-		nextFriday.set(Calendar.SECOND, 10);
-		System.out.println(nextFriday.getTime());
+		Date nextFriday = TimeHelper.calculateNextFriday();
 		AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-		alarm.setRepeating(AlarmManager.RTC_WAKEUP, nextFriday.getTime().getTime(), AlarmManager.INTERVAL_DAY * 7, PendingIntent.getBroadcast(this, 0, intentAlarm, 0));
+		alarm.setRepeating(AlarmManager.RTC_WAKEUP, nextFriday.getTime(), AlarmManager.INTERVAL_DAY * 7, PendingIntent.getBroadcast(this, 0, intentAlarm, 0));
 	
 	}// onCreate
 	

@@ -15,9 +15,7 @@ import java.util.StringTokenizer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.widget.EditText;
 
-import com.matpil.farmacia.R;
 import com.matpil.farmacia.model.Farmacia;
 import com.matpil.farmacia.model.InfoFarmacie;
 
