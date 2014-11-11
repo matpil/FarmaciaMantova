@@ -10,7 +10,6 @@ import android.text.Html;
 import android.text.InputType;
 import android.text.method.DigitsKeyListener;
 import android.view.View;
-import android.view.ViewParent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -37,7 +36,6 @@ public class SottoMenu {
 	// Costante per recupero stato popup
 	private final static String LABEL_GESTIONE_POPUP = "POPUP";
 	private EditText titleText;
-	private EditText numeroGuardiMedicaText;
 	private FullscreenActivity act;
 
 	public FullscreenActivity getAct() {
@@ -89,36 +87,6 @@ public class SottoMenu {
 	}
 
 	public Dialog modificaNumeriUtili() {
-		numeroGuardiMedicaText = new EditText(this.act);
-		numeroGuardiMedicaText.setInputType(InputType.TYPE_CLASS_PHONE);
-		numeroGuardiMedicaText.setKeyListener(DigitsKeyListener.getInstance(
-				false, true));
-
-		// AlertDialog.Builder builder = new AlertDialog.Builder(this.act);
-		//
-		// // builder.setTitle("Inserire numero della guardia medica");
-		// builder.setView(this.act.findViewById(R.layout.post_it_numeri_utili));
-		// builder.setPositiveButton("SALVA", new
-		// DialogInterface.OnClickListener() {
-		//
-		// @Override
-		// public void onClick(DialogInterface dialog, int which) {
-		// Toast.makeText(act, "SALVATO", Toast.LENGTH_LONG).show();
-		//
-		// }
-		// });
-		// builder.setNegativeButton("ANNULLA", new
-		// DialogInterface.OnClickListener() {
-		//
-		// @Override
-		// public void onClick(DialogInterface dialog, int which) {
-		// Toast.makeText(act, "ANNULLATO", Toast.LENGTH_LONG).show();
-		//
-		// }
-		// });
-		//
-		// builder.show();
-
 		final Dialog dialog = new Dialog(this.act);
 		dialog.setContentView(R.layout.post_it_numeri_utili);
 		dialog.setTitle("Modificatore campi per numeri utili");

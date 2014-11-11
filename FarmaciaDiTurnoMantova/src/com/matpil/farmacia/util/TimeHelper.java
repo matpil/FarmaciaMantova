@@ -72,4 +72,23 @@ public class TimeHelper {
 		return retrieveDateFormatted(pattern, time);
 	}
 
+	public static Date calculateNextFriday() {
+		Calendar today = Calendar.getInstance();
+		int dayOfWeek = today.get(Calendar.DAY_OF_WEEK);
+		int daysUntilNextFriday = Calendar.FRIDAY - dayOfWeek;
+		if (daysUntilNextFriday < 0 || (daysUntilNextFriday == 0 && today.get(Calendar.HOUR_OF_DAY) > 18)) {
+		    daysUntilNextFriday = daysUntilNextFriday + 7;
+		}
+		Calendar nextFriday = (Calendar)today.clone();
+		nextFriday.add(Calendar.DAY_OF_WEEK, daysUntilNextFriday);
+//		if(nextFriday.get(Calendar.WEEK_OF_YEAR) % 2 == 0){
+//		    nextFriday.add(Calendar.DAY_OF_WEEK, 7);
+//		}
+		nextFriday.set(Calendar.HOUR_OF_DAY, 19);
+		nextFriday.set(Calendar.MINUTE, 0);
+		nextFriday.set(Calendar.SECOND, 0);
+		return nextFriday.getTime();
+	}
+	
+	
 }

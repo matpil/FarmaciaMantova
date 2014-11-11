@@ -70,8 +70,7 @@ public class DataLoader {
 	}
 
 	public void cleanDataCorrente() {
-		this.dataCorrente = null;
-		
+		this.dataCorrente = null;	
 	}
 
 }

@@ -1,12 +1,17 @@
 package com.matpil.farmacia;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,9 +21,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager.LayoutParams;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -45,6 +52,8 @@ import com.matpil.farmacia.model.Intestazione;
 import com.matpil.farmacia.other.SystemUiHider;
 import com.matpil.farmacia.parser.AggiornamentoFileDaRemoto;
 import com.matpil.farmacia.parser.AggiornamentoFileDaSdCard;
+import com.matpil.farmacia.receiver.AlarmReceiver;
+import com.matpil.farmacia.service.AlarmRecieverService;
 import com.matpil.farmacia.service.BroadcastService;
 import com.matpil.farmacia.service.PopUpBroadcastService;
 import com.matpil.farmacia.util.DataLoader;
@@ -82,8 +91,11 @@ public class FullscreenActivity extends ActionBarActivity {
 
 	private Intent intent;
 	private Intent intentPopUp;
+	private Intent intentAlarm;
 	
-	private CountDownTimer mPopUpDismissTimer; // instance variable, put in your activity class
+
+	private CountDownTimer mPopUpDismissTimer; // instance variable, put in your
+												// activity class
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -99,8 +111,19 @@ public class FullscreenActivity extends ActionBarActivity {
 
 		intent = new Intent(this, BroadcastService.class);
 		intentPopUp = new Intent(this, PopUpBroadcastService.class);
-
+		
+		intentAlarm = new Intent(this, AlarmReceiver.class);
+		
+//		Date nextFriday = TimeHelper.calculateNextFriday();
+		Calendar nextFriday = Calendar.getInstance();
+		nextFriday.set(Calendar.MINUTE, 35);
+		nextFriday.set(Calendar.SECOND, 10);
+		System.out.println(nextFriday.getTime());
+		AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+		alarm.setRepeating(AlarmManager.RTC_WAKEUP, nextFriday.getTime().getTime(), AlarmManager.INTERVAL_DAY * 7, PendingIntent.getBroadcast(this, 0, intentAlarm, 0));
+	
 	}// onCreate
+	
 
 	private void displayInfo() {
 		// Caricamento dati
@@ -221,54 +244,81 @@ public class FullscreenActivity extends ActionBarActivity {
 				updateUI();
 			}
 			if (intent.getAction().equals(PopUpBroadcastService.POPUP_BROADCAST_ACTION)) {
-//				ImageView imageView = new ImageView(getApplicationContext());
-//				imageView.setImageDrawable((getResources().getDrawable(R.drawable.farmacie_di_turno_popup)));
+				// ImageView imageView = new ImageView(getApplicationContext());
+				// imageView.setImageDrawable((getResources().getDrawable(R.drawable.farmacie_di_turno_popup)));
 				loadPhoto();
 
+				getSupportActionBar().hide();
+			}
+			if(intent.getAction().equals(AlarmRecieverService.UPDATE_RESULT)) {
+				System.out.println("ALARM_FIRED");
+//				AggiornamentoFileDaRemoto.downloadAndCopyFiles(context);
+				Toast.makeText(context, "Aggiornamento settimanale via web completato", Toast.LENGTH_LONG).show();
+				displayInfo();
 			}
 		}
 	};
 
-	PopupWindow popupWindow =null;
-	
+	PopupWindow popupWindow = null;
+
 	private void loadPhoto() {
-		getPopUpDismissTimer(3000, 1000); //3000 ms is the time when you want to dismiss popup
-	
-		LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View layoutt = inflater.inflate(R.layout.custom_fullimage_dialog,(ViewGroup) findViewById(R.id.fullimage));
-		popupWindow = new PopupWindow(layoutt, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, true);
-		
-		popupWindow.showAtLocation(layoutt, Gravity.NO_GRAVITY, LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT);
-		
+		getPopUpDismissTimer(3000, 1000); // 3000 ms is the time when you want
+											// to dismiss popup
+
+		LayoutInflater inflater = (LayoutInflater) this
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		View layoutt = inflater.inflate(R.layout.custom_fullimage_dialog,
+				(ViewGroup) findViewById(R.id.fullimage));
+		popupWindow = new PopupWindow(layoutt, LayoutParams.MATCH_PARENT,
+				LayoutParams.MATCH_PARENT, true);
+
+		popupWindow.showAtLocation(layoutt, Gravity.NO_GRAVITY,
+				LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+
 		mPopUpDismissTimer.start();
-		
+
 	}
-	
-	private void getPopUpDismissTimer(long millisInFuture, long countDownInterval) { 
-		mPopUpDismissTimer = new CountDownTimer(millisInFuture, countDownInterval) {
+
+	private void getPopUpDismissTimer(long millisInFuture,
+			long countDownInterval) {
+		mPopUpDismissTimer = new CountDownTimer(millisInFuture,
+				countDownInterval) {
 			@Override
 			public void onTick(long millisUntilFinished) {
 			}
-			
+
 			@Override
 			public void onFinish() {
 				popupWindow.dismiss();
 			}
-			
+
 		};
 	}
 	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		LocalBroadcastManager.getInstance(this).registerReceiver((broadcastReceiver), new IntentFilter(AlarmRecieverService.UPDATE_RESULT));
+	}
 	
+	@Override
+	protected void onStop() {
+		LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+		super.onStop();
+	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
 		startService(intent);
 		startService(intentPopUp);
+		startService(intentAlarm);
 		registerReceiver(broadcastReceiver, new IntentFilter(
 				BroadcastService.BROADCAST_ACTION));
 		registerReceiver(broadcastReceiver, new IntentFilter(
 				PopUpBroadcastService.POPUP_BROADCAST_ACTION));
+		registerReceiver(broadcastReceiver, new IntentFilter(
+				AlarmRecieverService.ALARM_SERVICE));
 	}
 
 	@Override
@@ -277,6 +327,7 @@ public class FullscreenActivity extends ActionBarActivity {
 		unregisterReceiver(broadcastReceiver);
 		stopService(intent);
 		stopService(intentPopUp);
+		stopService(intentAlarm);
 	}
 
 	public void updateUI() {
@@ -373,7 +424,7 @@ public class FullscreenActivity extends ActionBarActivity {
 		}
 		return null;
 	}
-	
+
 	private Dialog updateDataDialog() {
 		return new AlertDialog.Builder(this)
 				.setTitle("AGGIORNARE GLI ARCHIVI DI FARMACIE E TURNI?")
@@ -382,7 +433,7 @@ public class FullscreenActivity extends ActionBarActivity {
 					public void onClick(DialogInterface dialog, int which) {
 						boolean copyFileFromRemote = copyFileFromRemote();
 						// COPIA FILE DA SD A MEMORIA INTERNA
-						if (!copyFileFromRemote){
+						if (!copyFileFromRemote) {
 							copyFileFromSdCard();
 						}
 						// AGGIORNARE FILE DATI
@@ -405,14 +456,14 @@ public class FullscreenActivity extends ActionBarActivity {
 		else
 			createAlert("ERRORE DURANTE L'AGGIORNAMENTO VIA MEMORIA SD DEI DATI");
 	}
-	
+
 	private boolean copyFileFromRemote() {
 		boolean copied = AggiornamentoFileDaRemoto.downloadAndCopyFiles(this);
 		if (copied)
 			createAlert("AGGIORNAMENTO VIA WEB AVVENUTO CON SUCCESSO");
 		else
 			createAlert("ERRORE DURANTE L'AGGIORNAMENTO VIA WEB DEI DATI, PROVO VIA MEMORIA SD");
-		
+
 		return copied;
 	}
 
@@ -440,9 +491,9 @@ public class FullscreenActivity extends ActionBarActivity {
 		case R.id.menu_cambia_file_turni:
 			showDialog(SottoMenu.AGGIORNA_TURNI);
 			return true;
-//		case R.id.menu_gestione_popup:
-//			showDialog(SottoMenu.GESTIONE_POPUP);
-//			return true;
+			// case R.id.menu_gestione_popup:
+			// showDialog(SottoMenu.GESTIONE_POPUP);
+			// return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
