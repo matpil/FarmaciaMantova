@@ -2,6 +2,7 @@ package com.matpil.farmacia;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -14,6 +15,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -22,6 +24,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager.LayoutParams;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -386,9 +389,37 @@ public class FullscreenActivity extends ActionBarActivity {
 	}
 
 	private boolean copyFileFromRemote() {
-		return AggiornamentoFileDaRemoto.downloadAndCopyFiles(this);
-	}
-
+		Log.d("copyFileFromRemote", "START");
+		AsyncTask<String,Void,Boolean> asyncTask = new UpdateTask(this).execute();
+		try {
+			Log.d("copyFileFromRemote", "END");
+			boolean ret = asyncTask.get();
+			Log.d("copyFileFromRemote", "ret -> "+ret);
+			return ret;
+		} catch (InterruptedException e) {			
+			Log.e("copyFileFromRemote", e.getMessage());
+		} catch (ExecutionException e) {
+			Log.e("copyFileFromRemote", e.getMessage());
+		}
+		return false;
+	}	
+	
+    private class UpdateTask extends AsyncTask<String, Void, Boolean> {
+    	
+    	private Context ctx;
+    	
+    	UpdateTask(Context c){
+    		ctx=c;
+    	}
+    	
+        @Override
+        protected Boolean doInBackground(String... strings) {
+        	Log.d("Activity.UpdateTask", "Inizio aggiornamento da remoto");
+        	Boolean updated = AggiornamentoFileDaRemoto.downloadAndCopyFiles(ctx);
+        	return updated;
+        }
+    }	
+    
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.layout.menu, menu);
 		return true;

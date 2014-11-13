@@ -10,8 +10,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Environment;
 import android.os.StrictMode;
+import android.util.Log;
 
 public class AggiornamentoFileDaRemoto {
 
@@ -21,28 +24,56 @@ public class AggiornamentoFileDaRemoto {
 	public static boolean downloadAndCopyFiles(Context context) {
 
 		try {
-			downloadAndStore(context, new URL(urlElencoFarmacie),
-					ImportaFarmacieDaFile.NOME_FILE_ELENCO_FARMACIE);
-			downloadAndStore(context, new URL(urlTurniFarmacie),
-					ImportaFarmacieDaFile.NOME_FILE_TURNI);
+			downloadAndStore(context, new URL(urlElencoFarmacie), ImportaFarmacieDaFile.NOME_FILE_ELENCO_FARMACIE);
+			downloadAndStore(context, new URL(urlTurniFarmacie), ImportaFarmacieDaFile.NOME_FILE_TURNI);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.e("AggiornamentoFileDaRemoto.downloadAndCopyFiles", e.getMessage());
 			return false;
 		}
 		return true;
 	}
+	
+	private static boolean isNetworkAvailable(Context context) {
+	    ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+	    NetworkInfo netInfo = cm.getActiveNetworkInfo();
+	    return netInfo != null && netInfo.isConnectedOrConnecting();
+	}
+	
+	private static boolean isInternetConnectionAvailable(Context context) {
+	    if (isNetworkAvailable(context)) {
+	        try {
+	        	
+				StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+				StrictMode.setThreadPolicy(policy);
+	        	
+	            HttpURLConnection urlc = (HttpURLConnection) (new URL("http://www.google.com").openConnection());
+	            urlc.setRequestProperty("User-Agent", "Test");
+	            urlc.setRequestProperty("Connection", "close");
+	            urlc.setConnectTimeout(1500); 
+	            urlc.connect();
+	            return (urlc.getResponseCode() == 200);
+	        } catch (IOException e) {
+	            Log.e("AggiornamentoFileDaRemoto", "Error checking internet connection", e);
+	        }
+	    } else {
+	        Log.d("AggiornamentoFileDaRemoto", "No network available!");
+	    }
+	    return false;
+	}
 
-	private static void downloadAndStore(Context context, URL url, String path)
-			throws Exception {
+	private static void downloadAndStore(Context context, URL url, String path) throws Exception {
 
 		try {
 			InputStream input = null;
 			OutputStream output = null;
 			HttpURLConnection connection = null;
+			
+			if (!isInternetConnectionAvailable(context))
+				throw new IOException("Connessione internet assente");
+			
 			connection = (HttpURLConnection) url.openConnection();
 
-			StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-					.permitAll().build();
+			StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 			StrictMode.setThreadPolicy(policy);
 
 			connection.connect();
@@ -50,9 +81,7 @@ public class AggiornamentoFileDaRemoto {
 			// expect HTTP 200 OK, so we don't mistakenly save error report
 			// instead of the file
 			if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				String msg = String.format("Server returned HTTP %s %s",
-						connection.getResponseCode(),
-						connection.getResponseMessage());
+				String msg = String.format("Server returned HTTP %s %s", connection.getResponseCode(), connection.getResponseMessage());
 				System.out.println(msg);
 				throw new IOException(msg);
 			}
@@ -67,9 +96,7 @@ public class AggiornamentoFileDaRemoto {
 			// and connect!
 
 			checkDir(context);
-			File downloaded = new File(String.format("%s/%s/%s",
-					Environment.getExternalStorageDirectory(),
-					Environment.DIRECTORY_DOWNLOADS, path));
+			File downloaded = new File(String.format("%s/%s/%s", Environment.getExternalStorageDirectory(), Environment.DIRECTORY_DOWNLOADS, path));
 
 			// this will be used to write the downloaded data into the file we
 			// created
@@ -84,8 +111,7 @@ public class AggiornamentoFileDaRemoto {
 			output.flush();
 			output.close();
 
-			File toImport = new File(String.format("%s/%s",
-					ImportaFarmacieDaFile.internalMemoryPath, path));
+			File toImport = new File(String.format("%s/%s", ImportaFarmacieDaFile.internalMemoryPath, path));
 			// System.out.println("toImport -> " + toImport.getAbsolutePath());
 			AggiornamentoFileDaSdCard.copyFile(downloaded, toImport);
 			downloaded.delete();
