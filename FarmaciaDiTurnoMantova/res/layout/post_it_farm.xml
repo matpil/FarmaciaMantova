@@ -21,7 +21,7 @@
         android:gravity="right"
         android:text="@string/genericString"
         android:textColor="#000000"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold" />
 
     <TextView
@@ -34,7 +34,7 @@
         android:gravity="left"
         android:text="@string/genericString"
         android:textColor="#000000"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold" />
 
     <TextView
@@ -47,7 +47,7 @@
         android:gravity="right"
         android:text="@string/genericString"
         android:textColor="#000000"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold" />
     
     <TextView
@@ -59,7 +59,7 @@
         android:fontFamily="sans-serif-condensed"
         android:text="@string/genericString"
         android:textColor="#000000"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold" />
     
 <!-- -->
