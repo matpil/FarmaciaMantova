@@ -3,7 +3,6 @@ package com.matpil.farmacia.adapter;
 import java.util.List;
 
 import android.app.Activity;
-import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,7 +70,6 @@ public class GridviewAdapter extends BaseAdapter {
 
 		Farmacia farmacia = listPharm.get(position);		
 		if (farmacia != null) {
-//			impostaTypeFace(view);
 			view.nome.setText(farmacia.getNome());			
 			view.località.setText(farmacia.getLocalità());
 			view.indirizzo.setText(farmacia.getIndirizzo());
@@ -81,13 +79,5 @@ public class GridviewAdapter extends BaseAdapter {
 		}
 		return convertView;
 	}
-	
-	private void impostaTypeFace(ViewHolder view) {
-		Typeface tf = Typeface.createFromAsset(activity.getAssets(),"fonts/Agency_FB.ttf");	
-		view.nome.setTypeface(tf);
-		view.località.setTypeface(tf);
-		view.indirizzo.setTypeface(tf);
-		view.telefono.setTypeface(tf);
-		view.note.setTypeface(tf);
-	}
+
 }
